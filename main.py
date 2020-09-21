@@ -70,18 +70,19 @@ img_filter_PCr = median_filter_images(img_PCr)
 
 output_original_path_PCr = createPathArray(INITIALIZATION['paths']['31P_PCr'], sub_path['subject_dir'])
 output_filter_path_PCr = createPathArray(INITIALIZATION['paths']['31P_PCr'], sub_path['subject_dir'], INITIALIZATION['paths']['replaceFolder'], ['meas', 'measFilter'])
+output_realign_path_PCr = createPathArray(INITIALIZATION['paths']['31P_PCr'], sub_path['subject_dir'], INITIALIZATION['paths']['replaceFolder'], ['meas', 'rmeas'])
 
 print("-Saved filter images-")
-saveArrayNifti(img_filter_PCr,output_path_PCr)
+saveArrayNifti(img_filter_PCr,output_filter_path_PCr)
 
 print("-Realing images-")
 #realign_imgs(output_path_PCr)
-calc_coreg_imgs(output_filter_path_PCr[0], output_filter_path_PCr[1:-1], 'output/pcr_toall.mat')
+calc_coreg_imgs(output_filter_path_PCr[0], output_filter_path_PCr, 'output/pcr_toall.mat')
 
 #print("-Find matrix images-")
 #matrix = find_realign_matrix(os.path.split(output_path_PCr[0])[0])
 
 print("-Apply transformation images")
-apply_coreg_imgs(output_original_path_PCr[0], output_original_path_PCr[1:-1], 'output/pcr_toall.mat' )
+apply_transf_imgs(output_original_path_PCr, 'output/pcr_toall.mat' , output_realign_path_PCr)
 
 print("--Sucess--")

@@ -30,16 +30,17 @@ def calc_coreg_imgs(target, array_moving, output_mat_base):
         output_mat = output_mat_base.replace('.mat', '{0}.mat'.format(i))
         calc_coreg_img(target, array_moving[i], output_mat)
 
-def apply_coreg(target, moving, mat_file):
+def apply_transf(moving, mat_file, output_file):
     applymat = spmu.ApplyTransform()
     applymat.inputs.in_file = moving
     applymat.inputs.mat = mat_file
+    applymat.out_file = output_file
     applymat.run() 
 
-def apply_coreg_imgs(target, array_moving, output_mat_base):
+def apply_transf_imgs(array_moving, output_mat_base, output_file):
     for i in range(len(array_moving)):
         output_mat = output_mat_base.replace('.mat', '{0}.mat'.format(i))
-        apply_coreg(target, array_moving[i], output_mat)
+        apply_transf(array_moving[i], output_mat, output_file[i])
 
 
 def find_realign_matrix(directory):
