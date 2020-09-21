@@ -1,0 +1,7 @@
+meas_MID294_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID4938_filter_hamming2_freq_0_echo_0_trans.nii
+*.nii
+*.mat
+output/
+*.pyc
+output/inverse_pcr_toall0.mat
+output/inverse_pcr_toall1.mat
