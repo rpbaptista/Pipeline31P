@@ -9,9 +9,9 @@ addpath('/i2bm/local/spm12-7487');
         movingv = spm_vol(moving);
         x = spm_coreg(targetv, movingv);
         M = spm_matrix(x);
-        save('output/pcr_toall3.mat' , 'M' );
+        save('/neurospin/ciclops/people/Renata/Codes/Pipeline31P/output/pcr_toall3.mat' , 'M' );
         M = inv(M);
-        save('output/inverse_pcr_toall3.mat','M')
+        save('/neurospin/ciclops/people/Renata/Codes/Pipeline31P/output/inverse_pcr_toall3.mat','M')
         
 ,catch ME,
 fprintf(2,'MATLAB code threw an exception:\n');

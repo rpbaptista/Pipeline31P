@@ -3,9 +3,9 @@ ver,
 try,
 addpath('/i2bm/local/spm12-7487');
 
-        infile = '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-08-28/meas_MID295_31P_MT_cATP_FA360_PCr_TPI_P3600_RES12_TR250_TE5_FID4939_filter_hamming2_freq_0_echo_0.nii';
-        outfile = '/neurospin/ciclops/people/Renata/Codes/Pipeline31P/meas_MID295_31P_MT_cATP_FA360_PCr_TPI_P3600_RES12_TR250_TE5_FID4939_filter_hamming2_freq_0_echo_0_trans.nii'
-        transform = load('output/pcr_toall3.mat');
+        infile = '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-08-28/meas_MID295_31P_MT_cATP_FA360_PCr_TPI_P3600_RES12_TR250_TE5_FID4939_filter_hamming2_freq_-300_echo_0.nii';
+        outfile = '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-08-28/rmeas_MID295_31P_MT_cATP_FA360_PCr_TPI_P3600_RES12_TR250_TE5_FID4939_filter_hamming2_freq_-300_echo_0.nii'
+        transform = load('/neurospin/ciclops/people/Renata/Codes/Pipeline31P/output/pcr_toall3.mat');
 
         V = spm_vol(infile);
         X = spm_read_vols(V);

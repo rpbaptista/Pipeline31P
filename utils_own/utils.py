@@ -34,7 +34,7 @@ def apply_transf(moving, mat_file, output_file):
     applymat = spmu.ApplyTransform()
     applymat.inputs.in_file = moving
     applymat.inputs.mat = mat_file
-    applymat.out_file = output_file
+    applymat.inputs.out_file = output_file
     applymat.run() 
 
 def apply_transf_imgs(array_moving, output_mat_base, output_file):
