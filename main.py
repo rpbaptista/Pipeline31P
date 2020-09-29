@@ -28,7 +28,7 @@ sys.path.append(os.path.join(sys.path[0],'./parameters/'))
     
 # Import homemade
 #from metrics import statisticsImage
-from utils import openArrayImages, createPath, createPathArray, saveArrayNifti
+from utils import *
 #from utilsEval import generateSaveGraphIntensityFA, computeStatistics
 from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
@@ -181,7 +181,9 @@ if __name__ == '__main__':
         print("-Create individual ROI")
         print("--Create ROI in MNI")
         mask = aggregate_mask(INITIALIZATION['roi']['cortical'],  INITIALIZATION['atlas']['path_cor'], mask_volunteer)
-
+        labels = get_labels(INITIALIZATION['atlas'],'labels_cor-xml')
+        print("-- This ROI contains")
+        labels.loc[INITIALIZATION['roi']['cortical']]['#text']
         print("--Apply individual inverse transformation to MNI")
         apply_warp(mask_volunteer, INITIALIZATION['template']['mni'], warp_file)
 
@@ -199,27 +201,14 @@ if __name__ == '__main__':
         FA = INITIALIZATION['acquisition']['FA']
         FA = np.asarray(FA)
 
-        mean_pcr = np.zeros(FA.shape)
-        error_pcr = np.zeros(FA.shape)
-        max_pcr = np.zeros(FA.shape)
-
-        mean_catp = np.zeros(FA.shape)
-        error_catp = np.zeros(FA.shape)
-        max_catp = np.zeros(FA.shape)
-
+        stats_pcr =  []
+        stats_catp =  []
         for i in range(img_cATP.shape[0]):
-            stats_pcr = statisticsImage(vols_PCr[i,:,:,:], mask_volunteer)
-            error_pcr[i] = stats_pcr.std
-            mean_pcr[i] = stats_pcr.mean
-            max_pcr[i] = stats_pcr.max
-
-            stats_catp = statisticsImage(vols_cATP[i,:,:,:], mask_volunteer)
-            error_catp[i] = stats_catp.std
-            max_catp[i] = stats_catp.max
-            mean_catp[i] = stats_catp.mean
-
-        print(mean_catp)
-        print(mean_pcr)
+            stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer))
+            stats_catp.append(statisticsImage(vols_cATP[i,:,:,:], mask_volunteer))
+          
+        plotStatMT(FA, stats_pcr, 'PCr', 'cATP', '/neurospin/ciclops/people/Renata/ProcessedData/Results/31P_Volunteer/2020-08-28')
+        plotStatMT(FA, stats_catp, 'PCr', 'cATP', '/neurospin/ciclops/people/Renata/ProcessedData/Results/31P_Volunteer/2020-08-28')
 
     else:
         print("-Skipped compute Statistics")
