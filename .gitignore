@@ -5,3 +5,15 @@ output/
 *.pyc
 output/inverse_pcr_toall0.mat
 output/inverse_pcr_toall1.mat
+output/inverse_pcr_toall0.mat
+output/*.mat
+output/*
+parameters/__pycache__/initialization.cpython-37.pyc
+utils_own/__pycache__/utils.cpython-37.pyc
+pyscript_applytransform.m
+pyscript_*.m
+utils_own/*.pyc
+utils_own/__pycache__/utils.cpython-37.pyc
+parameters/__pycache__/initialization.cpython-37.pyc
+output/pcr_toall1.mat
+output/pcr_toall0.mat
