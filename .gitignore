@@ -17,3 +17,11 @@ utils_own/__pycache__/utils.cpython-37.pyc
 parameters/__pycache__/initialization.cpython-37.pyc
 output/pcr_toall1.mat
 output/pcr_toall0.mat
+mask_volunteer_warp.nii.gz
+pyscript_applytransform.m
+pyscript_calccoregaffine.m
+pyscript_coregister.m
+rfl200200_20200819_001_012_mprage_sag_T1_160sl_iPAT2_log.txt
+rfl200200_20200819_001_012_mprage_sag_T1_160sl_iPAT2_warpcoef_inverse.nii.gz
+rfl200200_20200819_001_012_mprage_sag_T1_160sl_iPAT2_warped.nii.gz
+output/inverse_pcr_toall0.mat
