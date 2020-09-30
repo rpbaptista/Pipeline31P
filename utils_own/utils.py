@@ -14,7 +14,7 @@ import os
 import nipype.interfaces.spm.utils as spmu
 import nipype.interfaces.fsl as fsl
 #def create_mask (atlas, roi):
-
+import shutil
 
 def realign_imgs(in_files):
     realign = spm.Realign()
@@ -67,17 +67,24 @@ def reslice(target, in_files):
             r2ref.run()
 
 def add_prefix(fullpath, prefix=''):
-    split = os.path.split(fullpath)
-    return os.path.join(split[0], prefix + split[1])
+    if isinstance(fullpath, list):
+        for i in range(len(fullpath)):
+            split = os.path.split(fullpath[i])
+            fullpath[i] = os.path.join(split[0], prefix + split[1])
+    else:
+        split = os.path.split(fullpath)
+        fullpath = os.path.join(split[0], prefix + split[1])
 
-def coreg_imgs(target_filter,source , all_files, prefix):
-    coreg = spm.Coregister()
-    coreg.inputs.source = source
+    return fullpath 
 
-    coreg.inputs.target = target_filter
-    coreg.inputs.apply_to_files = all_files
-    coreg.inputs.out_prefix = prefix
-    coreg.run() 
+def coreg_imgs(target_filter, source, all_files1 , all_files2, prefix):
+    for i in range(len(all_files1)):
+        coreg = spm.Coregister()
+        coreg.inputs.source = source[i]
+        coreg.inputs.target = target_filter
+        coreg.inputs.apply_to_files = [all_files1[i],all_files2[i]]
+        coreg.inputs.out_prefix = prefix
+        coreg.run() 
 
 def normalize(anat, ref):
    #  norm12 = spm.Normalize12()
@@ -88,7 +95,10 @@ def normalize(anat, ref):
     fnt = fsl.FNIRT()
     res = fnt.run(ref_file=ref, in_file=anat) 
     return res
-
+def copy_files(array_path_origin, array_path_dest):
+    for i in range(len(array_path_origin)):
+        shutil.copy(array_path_origin[i], array_path_dest[i])
+        
 def inv_warp(warp_coef,ref):
 
     invwarp = fsl.InvWarp()
@@ -98,14 +108,18 @@ def inv_warp(warp_coef,ref):
     invwarp.inputs.reference = ref
 
     invwarp.inputs.output_type = "NIFTI_GZ"
-
+    invwarp.inputs.inverse_warp = warp_coef.replace('.nii', '_inverse.nii')
     res = invwarp.run() 
     return res
+
 def apply_warp(input_mask, ref_file, warp_file):
     aw = fsl.ApplyWarp()
     aw.inputs.in_file = input_mask
     aw.inputs.ref_file = ref_file
     aw.inputs.field_file = warp_file 
+    aw.inputs.out_file = input_mask.replace('.nii', '_unwarp.nii')
+    aw.inputs.output_type = "NIFTI"
+
     res = aw.run()
     return res
 
@@ -152,9 +166,8 @@ def aggregate_mask(INITIALIZATION_ROI,  atlas, output_filename):
     img = nb.load(atlas)
     hdr = img.header
     data = img.get_fdata()
-    new_mask = np.in1d( data, INITIALIZATION_ROI ).reshape( atlas.shape )
-    nifti = nb.Nifti1Image(new_mask,np.eye(4))
-    nifti.header = hdr
+    new_mask = np.in1d( data, INITIALIZATION_ROI ).reshape( data.shape )
+    nifti = nb.Nifti1Image(new_mask.astype(int),None, header=hdr)
     nb.save(nifti, output_filename)
     return nifti
  
@@ -163,4 +176,4 @@ def img_to_mask(image):
 
 
 def computeStatisticsMT(imgs, mask, FA):
-    
+    return 0
