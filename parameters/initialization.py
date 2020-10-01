@@ -55,10 +55,20 @@ INITIALIZATION['atlas'] ={
 
 INITIALIZATION['template'] = {
     'mni' : '/volatile/softwares/FSL/data/standard/MNI152_T1_2mm.nii',
+    'mni_brain' : '/volatile/softwares/FSL/data/standard/MNI152_T1_2mm_brain.nii',
+
 }
 
 INITIALIZATION['roi'] = {
-    'cortical' : [1,2,3,4],
+    'cortical_up' : [1, 
+                2,4,7,8,42, #(maybe not)
+                5,6,9,11,28,41],
+    'cortical_down' : [
+                15,16,17,43,14, #(maybe not)
+                10,12,13,19,20,21,22,23,45,46],
+    'cortical_in' : [
+                 #(maybe not)
+                24,28,29,30,31,32,36],         
 }
 
 #INITIALIZATION['acquisition'] = {

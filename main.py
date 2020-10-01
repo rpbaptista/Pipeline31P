@@ -43,20 +43,20 @@ spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 if __name__ == '__main__':
     # Treat arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--align31P",
-                        help="0/1 to do first step analysis",
-                        type=int,
-                        default = 1)
-                        
     parser.add_argument("--alignAnat",
                         help="0/1 to do second step analysis",
                         type=int,
-                        default = 1)
+                        default = 0) # This step is long and works really well no need to keep updating
     
+    parser.add_argument("--align31P",
+                        help="0/1 to do first step analysis",
+                        type=int,
+                        default = 0)
+                        
     parser.add_argument("--warpMNI",
                         help="0/1 to do third step analysis",
                         type=int,
-                        default = 1)
+                        default = 0)
 
     parser.add_argument("--createROI",
                         help="0/1 to do four step analysis",
@@ -71,25 +71,20 @@ if __name__ == '__main__':
   
     args = parser.parse_args()
 
-    sub_par = INITIALIZATION['sub02']
-
-    atlas_subcortical = nib.load(INITIALIZATION['atlas']['path_sub']).get_fdata()
-    atlas_cortical = nib.load(INITIALIZATION['atlas']['path_cor']).get_fdata()
-
-
-    labels_cor = get_labels(INITIALIZATION['atlas'], 'labels_cor-xml')
-    labels_sub = get_labels(INITIALIZATION['atlas'], 'labels_sub-xml')
+    sub_par = INITIALIZATION['sub01']
+    roi = INITIALIZATION['roi']['cortical_up']
 
     print("--------- 31P MT pipeline  - v1.0------------")
 
     # now, that I have the final mask I need to 
     print("-Load images")
-
+    
+    #Final
     anat_1H_path = createPath(sub_par['anat_1H'],sub_par['subject_dir'] )
     realign_MNI_anat_1H_path = createPath(sub_par['anat_1H'],sub_par['subject_dir'], sub_par['replaceFolder'])
     anat_31P_path = createPath(sub_par['anat_31P'],sub_par['subject_dir'] )
     realign_31P_anat_path = createPath(sub_par['anat_31P'],sub_par['subject_dir'], sub_par['replaceFolder'])
-    #Final
+
     resliced_1H_MNI = add_prefix(realign_MNI_anat_1H_path, 'r')
     resliced_31P_into_MNI_1H = add_prefix(realign_31P_anat_path, 'r')
 
@@ -99,6 +94,7 @@ if __name__ == '__main__':
     nii = nib.load(createPath(sub_par['31P_PCr'][0], sub_par['subject_dir']))
     header = nii.header
     img_cATP = openArrayImages(sub_par['31P_cATP'], sub_par['subject_dir'])
+
     # Processed mask
     mask_volunteer = createPath( 'mask_volunteer.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
 
@@ -109,44 +105,15 @@ if __name__ == '__main__':
 
     # Processed images
     output_filter_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'measFilter'])
-    output_filter_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'measFilter'])
+    output_filter_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'measFilter'])
 
-    output_realignfilter_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'measrealfilter'])
     output_realign_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'rmeas'])
     output_realign_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'rmeas'])
-    final_realign_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'final_meas'])
-    final_realign_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'final_meas'])
-
-    output_anat_realign_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['rmeas', 'anatrmeas'])
-    output_anat_realign_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['rmeas', 'anatrmeas'])
-
-
-    if (args.align31P == 1):
-        print("-Prepare 31P to realign")
-
-        print("--Filter images: PCr images...")
-        img_filter_PCr = median_filter_images(img_PCr)
-
-        print("--Saved filter images...")
-        saveArrayNifti(img_filter_PCr,output_filter_path_PCr, header)
-
-     #   print("--Realing images...")
-        #realign_imgs(output_path_PCr)
-     #   calc_coreg_imgs(output_filter_path_PCr[0], output_filter_path_PCr, os.path.join(sub_par['output_dir'],'pcr_toall.mat') )
-
-      #  print("--Apply transformation images...")
-      #  apply_transf_imgs(output_filter_path_PCr, os.path.join(sub_par['output_dir'],'inverse_pcr_toall.mat') , output_realignfilter_path_PCr)
-        copy_files(output_original_path_PCr,output_realign_path_PCr)
-        copy_files(output_original_path_cATP,output_realign_path_cATP)
-       # apply_transf_imgs(output_original_path_PCr, os.path.join(sub_par['output_dir'],'inverse_pcr_toall.mat') , output_realign_path_PCr)
-       # apply_transf_imgs(output_original_path_cATP, os.path.join(sub_par['output_dir'],'inverse_pcr_toall.mat') , output_realign_path_cATP)
-    else:
-        print("-Skipped Prepare 31P to realign.")
 
     if (args.alignAnat == 1):
 
         print("-Register and reslice with anatomy")
-        
+       
         print("--Realigned anat to TEMPLATE")
         calc_coreg_imgs(INITIALIZATION['template']['mni'], [anat_1H_path], os.path.join(sub_par['output_dir'],'anat_register_mni.mat'))
         apply_transf_imgs([anat_1H_path], os.path.join(sub_par['output_dir'],'inverse_anat_register_mni.mat') , [realign_MNI_anat_1H_path])
@@ -160,13 +127,31 @@ if __name__ == '__main__':
 
         print("--Reslice anat 1H into MNI")
         reslice(resliced_1H_MNI, realign_31P_anat_path)
-
-
-        print("--Realigned 31 P to anat 31P-1H-MNI")
-        coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_PCr, output_realign_path_PCr,output_realign_path_cATP, 'anat31Pr')
-    
+           
     else:
         print("-Skipped aligned with anat.")
+
+
+    if (args.align31P == 1):
+        print("-Aligned 31P to 31P-1H-MNI")
+
+        print("--Filter images: PCr images...")
+        img_filter_PCr = median_filter_images(img_PCr)
+        img_filter_cATP = median_filter_images(img_cATP)
+
+        print("--Saved filter images...")
+        saveArrayNifti(img_filter_PCr,output_filter_path_PCr, header)
+        saveArrayNifti(img_filter_cATP,output_filter_path_cATP, header)
+
+        copy_files(output_original_path_PCr,output_realign_path_PCr)
+        copy_files(output_original_path_cATP,output_realign_path_cATP)
+    
+        print("--Realing images...")
+        coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP, output_realign_path_PCr,output_realign_path_cATP, 'catp_anat31Pr')
+        coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP, output_realign_path_PCr,output_realign_path_cATP, 'anat31Pr')
+
+    else:
+        print("-Skipped Aligned 31P to 31P-1H-MNI.")
 
     if (args.warpMNI == 1):
         print("-Finding warp transformation anat -> MNI")
@@ -176,14 +161,22 @@ if __name__ == '__main__':
     else:
         print("-Skipped warp transformation anat -> MNI")
    
+    if (args.invwarpMNI == 1):
+        print("-Finding inversewarp transformation anat -> MNI")
+        print("--Invwarp")
+        normalize_out = normalize(resliced_1H_MNI, INITIALIZATION['template']['mni'])
+
+    else:
+        print("-Skipped warp transformation anat -> MNI")
+   
 
     if (args.createROI == 1):
         print("-Create individual ROI")
         print("--Create ROI in MNI")
-        mask = aggregate_mask(INITIALIZATION['roi']['cortical'],  INITIALIZATION['atlas']['path_cor'], mask_volunteer)
+        mask = aggregate_mask(roi,  INITIALIZATION['atlas']['path_cor'], mask_volunteer)
         labels = get_labels(INITIALIZATION['atlas'],'labels_cor-xml')
         print("-- This ROI contains")
-        print(labels.loc[INITIALIZATION['roi']['cortical']]['#text'])
+        print(labels.loc[roi]['#text'])
         print("--Apply individual inverse transformation to MNI")
         apply_warp(mask_volunteer, INITIALIZATION['template']['mni'], warp_file)
         apply_warp(resliced_1H_MNI, INITIALIZATION['template']['mni'], warp_file)
@@ -193,8 +186,8 @@ if __name__ == '__main__':
     
     if (args.computeStatistics == 1):
         print("-Compute mean in ROI")
-        r_final_realign_path_cATP = add_prefix(output_realign_path_cATP, 'anat31Pr')
-        r_final_realign_path_PCr = add_prefix(output_realign_path_PCr, 'anat31Pr')
+        r_final_realign_path_cATP = add_prefix(output_realign_path_cATP, 'catp_anat31Pr')
+        r_final_realign_path_PCr = add_prefix(output_realign_path_PCr, 'catp_anat31Pr')
         
         vols_cATP = openArrayImages(r_final_realign_path_cATP)
         vols_PCr = openArrayImages(r_final_realign_path_PCr)
