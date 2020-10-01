@@ -77,6 +77,18 @@ def add_prefix(fullpath, prefix=''):
 
     return fullpath 
 
+
+#def add_sufix(fullpath, sufix=''):
+#    if isinstance(fullpath, list):
+#        for i in range(len(fullpath)):
+#            split = os.path.split(fullpath[i])
+#            fullpath[i] = os.path.join(split[0], split[1]+sufix)
+#    else:
+#        split = os.path.split(fullpath)
+#        fullpath = os.path.join(split[0], split[1]+sufix)
+#
+#    return fullpath 
+
 def coreg_imgs(target_filter, source, all_files1 , all_files2, prefix):
     for i in range(len(all_files1)):
         coreg = spm.Coregister()
@@ -98,7 +110,7 @@ def normalize(anat, ref):
 def copy_files(array_path_origin, array_path_dest):
     for i in range(len(array_path_origin)):
         shutil.copy(array_path_origin[i], array_path_dest[i])
-        
+
 def inv_warp(warp_coef,ref):
 
     invwarp = fsl.InvWarp()
@@ -112,14 +124,18 @@ def inv_warp(warp_coef,ref):
     res = invwarp.run() 
     return res
 
-def apply_warp(input_mask, ref_file, warp_file):
+def apply_warp(input_mask, ref_file, warp_file, prefix=None, out_file=None):
     aw = fsl.ApplyWarp()
     aw.inputs.in_file = input_mask
     aw.inputs.ref_file = ref_file
-    aw.inputs.field_file = warp_file 
-    aw.inputs.out_file = input_mask.replace('.nii', '_unwarp.nii')
+    aw.inputs.field_file = warp_file
+    if prefix == None and out_file == None: 
+        aw.inputs.out_file = add_prefix(input_mask, prefix='warp')
+    elif out_file != None:
+        aw.inputs.out_file = out_file
+    else: 
+        aw.inputs.out_file = add_prefix(input_mask, prefix=prefix)
     aw.inputs.output_type = "NIFTI"
-
     res = aw.run()
     return res
 

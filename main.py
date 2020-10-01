@@ -44,16 +44,21 @@ if __name__ == '__main__':
     # Treat arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--alignAnat",
-                        help="0/1 to do second step analysis",
+                        help="1 to align mni with anats",
                         type=int,
                         default = 0) # This step is long and works really well no need to keep updating
     
     parser.add_argument("--align31P",
-                        help="0/1 to do first step analysis",
+                        help="0/1 to align 31P images",
                         type=int,
                         default = 0)
                         
     parser.add_argument("--warpMNI",
+                        help="0/1 to do third step analysis",
+                        type=int,
+                        default = 0)
+
+    parser.add_argument("--invwarpMNI",
                         help="0/1 to do third step analysis",
                         type=int,
                         default = 0)
@@ -72,7 +77,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sub_par = INITIALIZATION['sub01']
-    roi = INITIALIZATION['roi']['cortical_up']
+    roi = INITIALIZATION['roi']['cortical_down']
 
     print("--------- 31P MT pipeline  - v1.0------------")
 
@@ -96,6 +101,7 @@ if __name__ == '__main__':
     img_cATP = openArrayImages(sub_par['31P_cATP'], sub_par['subject_dir'])
 
     # Processed mask
+    mask_mni = createPath( 'mask_mni.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     mask_volunteer = createPath( 'mask_volunteer.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
 
 
@@ -164,8 +170,7 @@ if __name__ == '__main__':
     if (args.invwarpMNI == 1):
         print("-Finding inversewarp transformation anat -> MNI")
         print("--Invwarp")
-        normalize_out = normalize(resliced_1H_MNI, INITIALIZATION['template']['mni'])
-
+        inv_warp(warp_file, INITIALIZATION['template']['mni'])
     else:
         print("-Skipped warp transformation anat -> MNI")
    
@@ -173,13 +178,14 @@ if __name__ == '__main__':
     if (args.createROI == 1):
         print("-Create individual ROI")
         print("--Create ROI in MNI")
-        mask = aggregate_mask(roi,  INITIALIZATION['atlas']['path_cor'], mask_volunteer)
+        mask = aggregate_mask(roi,  INITIALIZATION['atlas']['path_cor'], mask_mni)
         labels = get_labels(INITIALIZATION['atlas'],'labels_cor-xml')
         print("-- This ROI contains")
         print(labels.loc[roi]['#text'])
         print("--Apply individual inverse transformation to MNI")
-        apply_warp(mask_volunteer, INITIALIZATION['template']['mni'], warp_file)
-        apply_warp(resliced_1H_MNI, INITIALIZATION['template']['mni'], warp_file)
+        apply_warp(mask_mni, INITIALIZATION['template']['mni'], warp_file.replace('.nii', '_inverse.nii'), out_file=mask_volunteer)
+        apply_warp(resliced_1H_MNI, INITIALIZATION['template']['mni'], warp_file, prefix='warp')
+        apply_warp(add_prefix(resliced_1H_MNI,'warp'), INITIALIZATION['template']['mni'], warp_file, prefix='unwarp')
 
     else:
         print("-Skipped create ROI MNI.")
@@ -191,7 +197,7 @@ if __name__ == '__main__':
         
         vols_cATP = openArrayImages(r_final_realign_path_cATP)
         vols_PCr = openArrayImages(r_final_realign_path_PCr)
-        mask_volunteer = openArrayImages(mask_volunteer.replace('.nii', '_unwarp.nii'))
+        mask_volunteer = openArrayImages(mask_volunteer)
         FA = sub_par['FA']
         FA = np.asarray(FA)
 
