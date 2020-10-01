@@ -15,7 +15,7 @@ import nipype.interfaces.spm.utils as spmu
 import nipype.interfaces.fsl as fsl
 #def create_mask (atlas, roi):
 import shutil
-
+import gzip
 def realign_imgs(in_files):
     realign = spm.Realign()
     realign.inputs.in_files = in_files 
@@ -124,7 +124,7 @@ def inv_warp(warp_coef,ref):
     res = invwarp.run() 
     return res
 
-def apply_warp(input_mask, ref_file, warp_file, prefix=None, out_file=None):
+def apply_warp(input_mask, ref_file, warp_file, prefix=None, out_file=None, forceNii=False):
     aw = fsl.ApplyWarp()
     aw.inputs.in_file = input_mask
     aw.inputs.ref_file = ref_file
@@ -135,10 +135,23 @@ def apply_warp(input_mask, ref_file, warp_file, prefix=None, out_file=None):
         aw.inputs.out_file = out_file
     else: 
         aw.inputs.out_file = add_prefix(input_mask, prefix=prefix)
-    aw.inputs.output_type = "NIFTI"
+    aw.inputs.output_type = "NIFTI_GZ"
+    if forceNii == True:
+        aw.inputs.output_type = "NIFTI"
+
     res = aw.run()
     return res
 
+def BET(image_path, th=None):
+    btr = fsl.BET()
+    btr.inputs.in_file = image_path
+    if th==None:
+        btr.inputs.frac = 0.7
+    else:
+        btr.inputs.frac = th
+    btr.inputs.output_type='NIFTI_GZ'
+    btr.inputs.out_file = image_path.replace('.nii', '_brain.nii.gz')
+    res = btr.run() 
 def find_realign_matrix(directory):
         
     count = 0
