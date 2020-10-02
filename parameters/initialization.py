@@ -56,6 +56,7 @@ INITIALIZATION['atlas'] ={
 INITIALIZATION['template'] = {
     'mni' : '/volatile/softwares/FSL/data/standard/MNI152_T1_2mm.nii',
     'mni_brain' : '/volatile/softwares/FSL/data/standard/MNI152_T1_2mm_brain.nii',
+    'mni_prob' : '/neurospin/ciclops/people/Renata/ProcessedData/Templates/MNI-prob-2mm-brain.nii.gz',
 
 }
 

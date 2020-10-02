@@ -135,6 +135,8 @@ def run_pipeline(sub,roi_id,args):
     if (args.skulltrip == 1):
         print("-Skull trip ")
         BET(resliced_1H_MNI,0.3)
+        brain_extraction(resliced_1H_MNI,INITIALIZATION['template']['mni'], INITIALIZATION['template']['mni_prob'])
+
     else:
         print("-Skipped skull trip ")
 

@@ -16,6 +16,16 @@ import nipype.interfaces.fsl as fsl
 #def create_mask (atlas, roi):
 import shutil
 import gzip
+from nipype.interfaces.ants.segmentation import BrainExtraction
+
+def extract_brain(anat,template, probability):
+    brainextraction = BrainExtraction()
+    brainextraction.inputs.dimension = 3
+    brainextraction.inputs.anatomical_image =anat
+    brainextraction.inputs.brain_template =template
+    brainextraction.inputs.brain_probability_mask = probability
+    brainextraction.run()
+
 def realign_imgs(in_files):
     realign = spm.Realign()
     realign.inputs.in_files = in_files 
