@@ -15,8 +15,8 @@ BET_option = [ 1]
 args = argPipeline(alignAnat=0,
                     align31P=0,
                     skulltrip=0,
-                    warpMNI=1,      
-                    invwarpMNI=1,
+                    warpMNI=0,      
+                    invwarpMNI=0,
                     createROI=1,
                     computeStatistics=1, 
                     BET = True)
@@ -29,7 +29,7 @@ for bet in BET_option:
         for sub in subs:
             args.BET = bet
             run_pipeline(sub,roi,args)
-            
+
             if firstRun == True:
                 firstRun = False
                 args.alignAnat = 0

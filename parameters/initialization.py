@@ -63,7 +63,7 @@ INITIALIZATION['template'] = {
 INITIALIZATION['roi'] = {
     'cortical_up' : [1, 
                 2,4,7,8,42, #(maybe not)
-                5,6,9,11,28,41],
+                5,6,9,11,41],
     'cortical_down' : [
                 15,16,17,43,14, #(maybe not)
                 10,12,13,19,20,21,22,23,45,46],

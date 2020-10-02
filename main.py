@@ -28,7 +28,7 @@ sys.path.append(os.path.join(sys.path[0],'./parameters/'))
     
 # Import homemade
 #from metrics import statisticsImage
-from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti
+from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel
 #from utilsEval import generateSaveGraphIntensityFA, computeStatistics
 from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
@@ -188,12 +188,18 @@ def run_pipeline(sub,roi_id,args):
         for i in range(img_cATP.shape[0]):
             stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer))
             stats_catp.append(statisticsImage(vols_cATP[i,:,:,:], mask_volunteer))
+        
+        print("-Save images")
+
         if BET_options == 1:
             plotStatMT(FA, stats_pcr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'brain_only_'+sub+'_'+roi_id)
             plotStatMT(FA, stats_catp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'brain_only_'+sub+'_'+roi_id)
         else:
             plotStatMT(FA, stats_pcr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'full_skull_'+sub+'_'+roi_id)
             plotStatMT(FA, stats_catp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'full_skull_'+sub+'_'+roi_id)
+       
+        print("-Save excel")
+        saveExcel (FA, stats_pcr, stats_catp, 'PCr', 'cATP', sub_par['output_dir'], sufix=sub+'_'+roi_id)
     else:
         print("-Skipped compute Statistics")
 
