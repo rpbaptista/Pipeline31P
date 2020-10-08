@@ -54,12 +54,16 @@ def apply_transf(moving, mat_file, output_file):
     applymat.inputs.out_file = output_file
     applymat.run() 
 
-def apply_transf_imgs(array_moving, output_mat_base, output_file):
+def apply_transf_imgs(array_moving, output_mat_base, output_file, same_mat= False):
     if isinstance(array_moving, str):
         apply_transf(array_moving, output_mat_base, output_file)
   
     for i in range(len(array_moving)):
-        output_mat = output_mat_base.replace('.mat', '{0}.mat'.format(i))
+        if same_mat == True:
+            output_mat = output_mat_base.replace('.mat', '0.mat')
+        else:
+            output_mat = output_mat_base.replace('.mat', '{0}.mat'.format(i))
+        
         apply_transf(array_moving[i], output_mat, output_file[i])
 
 def reslice(target, in_files):

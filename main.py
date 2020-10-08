@@ -29,6 +29,8 @@ sys.path.append(os.path.join(sys.path[0],'./parameters/'))
 # Import homemade
 #from metrics import statisticsImage
 from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel
+from metrics import ListStatistics
+
 #from utilsEval import generateSaveGraphIntensityFA, computeStatistics
 from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
@@ -65,11 +67,12 @@ def run_pipeline(sub,roi_id,args):
 
     warp_file = resliced_1H_MNI_brain.replace('.nii', '_warpcoef.nii')
 
-    img_PCr = openArrayImages(sub_par['31P_PCr'], sub_par['subject_dir'])
     nii = nib.load(createPath(sub_par['31P_PCr'][0], sub_par['subject_dir']))
     header = nii.header
+   
+    img_PCr = openArrayImages(sub_par['31P_PCr'], sub_par['subject_dir'])
     img_cATP = openArrayImages(sub_par['31P_cATP'], sub_par['subject_dir'])
-
+  
     # Processed mask
     mask_mni = createPath( 'mask_mni'+roi_id+'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     mask_volunteer = createPath( 'mask_volunteer'+roi_id+'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
@@ -82,9 +85,13 @@ def run_pipeline(sub,roi_id,args):
     # Processed images
     output_filter_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'measFilter'])
     output_filter_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'measFilter'])
+    output_filter_path_PCr_r = add_prefix(output_filter_path_PCr, 'r')
+    output_filter_path_cATP_r = add_prefix(output_filter_path_cATP, 'r')
 
     output_realign_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'rmeas'])
     output_realign_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'rmeas'])
+    output_realign_path_PCr_2 = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'r2meas'])
+    output_realign_path_cATP_2 = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'r2meas'])
 
     if (args.alignAnat == 1):
 
@@ -116,6 +123,7 @@ def run_pipeline(sub,roi_id,args):
         print("--Filter images: PCr images...")
         img_filter_PCr = median_filter_images(img_PCr)
         img_filter_cATP = median_filter_images(img_cATP)
+        
 
         print("--Saved filter images...")
         saveArrayNifti(img_filter_PCr,output_filter_path_PCr, header)
@@ -123,10 +131,18 @@ def run_pipeline(sub,roi_id,args):
 
         copy_files(output_original_path_PCr,output_realign_path_PCr)
         copy_files(output_original_path_cATP,output_realign_path_cATP)
-    
+
+        print("--Apply anat 31P to H transformation in all other 31P...")
+
+        apply_transf_imgs(output_filter_path_PCr, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_filter_path_PCr_r, True)
+        apply_transf_imgs(output_filter_path_cATP, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_filter_path_cATP_r, True)
+
+        apply_transf_imgs(output_realign_path_PCr, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_realign_path_PCr_2, True)
+        apply_transf_imgs(output_realign_path_cATP, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_realign_path_cATP_2, True)
+
         print("--Realing images...")
-        coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP, output_realign_path_PCr,output_realign_path_cATP, 'catp_anat31Pr')
-        coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP, output_realign_path_PCr,output_realign_path_cATP, 'anat31Pr')
+        coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP_r, output_realign_path_PCr_2,output_realign_path_cATP_2, 'catp_anat31Pr')
+   #     coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP_r, output_realign_path_PCr,output_realign_path_cATP, 'anat31Pr')
 
     else:
         print("-Skipped Aligned 31P to 31P-1H-MNI.")
@@ -150,8 +166,8 @@ def run_pipeline(sub,roi_id,args):
     
     if (args.computeStatistics == 1):
         print("-Compute mean in ROI")
-        r_final_realign_path_cATP = add_prefix(output_realign_path_cATP, 'catp_anat31Pr')
-        r_final_realign_path_PCr = add_prefix(output_realign_path_PCr, 'catp_anat31Pr')
+        r_final_realign_path_cATP = add_prefix(output_realign_path_cATP_2, 'catp_anat31Pr')
+        r_final_realign_path_PCr = add_prefix(output_realign_path_PCr_2, 'catp_anat31Pr')
         
         vols_cATP = openArrayImages(r_final_realign_path_cATP)
         vols_PCr = openArrayImages(r_final_realign_path_PCr)
@@ -165,13 +181,16 @@ def run_pipeline(sub,roi_id,args):
             stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer))
             stats_catp.append(statisticsImage(vols_cATP[i,:,:,:], mask_volunteer))
         
+        listStatistics_cAtp = ListStatistics(stats_catp)
+        listStatistics_PCr = ListStatistics(stats_pcr)
+        
         print("-Save images")
-
-        plotStatMT(FA, stats_pcr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'brain_only_'+sub+'_'+roi_id)
-        plotStatMT(FA, stats_catp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'brain_only_'+sub+'_'+roi_id)
+        
+        plotStatMT(FA, listStatistics_PCr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'b_'+sub+'_'+roi_id)
+        plotStatMT(FA, listStatistics_cAtp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'b_'+sub+'_'+roi_id)
     
         print("-Save excel")
-        saveExcel (FA, stats_pcr, stats_catp, 'PCr', 'cATP', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+        saveExcel (FA, listStatistics_PCr, listStatistics_cAtp, 'PCr', 'cATP', sub_par['output_dir'], sufix=sub+'_'+roi_id)
     else:
         print("-Skipped compute Statistics")
 
@@ -189,8 +208,6 @@ if __name__ == '__main__':
     parser.add_argument("--roi",
                         help="which roi",
                         type=str,  
-
-
                         default='cortical_down') 
    
     parser.add_argument("--alignAnat",
