@@ -45,11 +45,8 @@ def run_pipeline(sub,roi_id,args):
 
     sub_par = INITIALIZATION[sub]
     roi = INITIALIZATION['roi'][roi_id]
-    BET_options = args.BET
     
-    if BET_options == 0:
-        INITIALIZATION['template']['mni_brain'] = INITIALIZATION['template']['mni']
-    
+      
     print("******************************** 31P MT pipeline  - v1.0************************")
     print('--------------------------'+sub+'--'+roi_id+'---------------------------------')
 
@@ -62,7 +59,7 @@ def run_pipeline(sub,roi_id,args):
     anat_31P_path = createPath(sub_par['anat_31P'],sub_par['subject_dir'] )
     realign_31P_anat_path = createPath(sub_par['anat_31P'],sub_par['subject_dir'], sub_par['replaceFolder'])
 
-    resliced_1H_MNI = add_prefix(realign_MNI_anat_1H_path, 'r')
+    resliced_1H_MNI = add_prefix(realign_MNI_anat_1H_path, 'fsl_r')
     resliced_1H_MNI_brain = resliced_1H_MNI.replace('.nii', '_brain.nii.gz')
     resliced_31P_into_MNI_1H = add_prefix(realign_31P_anat_path, 'r')
 
@@ -96,9 +93,11 @@ def run_pipeline(sub,roi_id,args):
         print("--Realigned anat to TEMPLATE")
         calc_coreg_imgs(INITIALIZATION['template']['mni'], [anat_1H_path], os.path.join(sub_par['output_dir'],'anat_register_mni.mat'))
         apply_transf_imgs([anat_1H_path], os.path.join(sub_par['output_dir'],'inverse_anat_register_mni.mat') , [realign_MNI_anat_1H_path])
-
+        
         print("--Reslice anat 1H into MNI")
         reslice(INITIALIZATION['template']['mni'], realign_MNI_anat_1H_path)
+        aux = add_prefix(realign_MNI_anat_1H_path, 'r')
+        fsl_anat(aux, resliced_1H_MNI,resliced_1H_MNI_brain, warp_file,  warp_file.replace('.nii', '_inverse.nii'), INITIALIZATION['template']['mni'])
 
         print("--Realigned anat 31 P to anat-1H-MNI")
         calc_coreg_imgs(resliced_1H_MNI, [anat_31P_path], os.path.join(sub_par['output_dir'],'anat1H_anat31P.mat') )
@@ -132,30 +131,7 @@ def run_pipeline(sub,roi_id,args):
     else:
         print("-Skipped Aligned 31P to 31P-1H-MNI.")
 
-    if (args.skulltrip == 1):
-        print("-Skull trip ")
-        BET(resliced_1H_MNI,0.3)
-        brain_extraction(resliced_1H_MNI,INITIALIZATION['template']['mni'], INITIALIZATION['template']['mni_prob'])
 
-    else:
-        print("-Skipped skull trip ")
-
-    
-    if (args.warpMNI == 1):
-        print("-Finding warp transformation anat -> MNI")
-        print("--FNIRT")
-        normalize(resliced_1H_MNI_brain, INITIALIZATION['template']['mni_brain'])
-
-    else:
-        print("-Skipped warp transformation anat -> MNI")
-   
-    if (args.invwarpMNI == 1):
-        print("-Finding inversewarp transformation anat -> MNI")
-        print("--Invwarp")
-        inv_warp(warp_file, INITIALIZATION['template']['mni_brain'])
-    else:
-        print("-Skipped warp transformation anat -> MNI")
-   
 
     if (args.createROI == 1):
         print("-Create individual ROI")
@@ -191,13 +167,9 @@ def run_pipeline(sub,roi_id,args):
         
         print("-Save images")
 
-        if BET_options == 1:
-            plotStatMT(FA, stats_pcr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'brain_only_'+sub+'_'+roi_id)
-            plotStatMT(FA, stats_catp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'brain_only_'+sub+'_'+roi_id)
-        else:
-            plotStatMT(FA, stats_pcr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'full_skull_'+sub+'_'+roi_id)
-            plotStatMT(FA, stats_catp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'full_skull_'+sub+'_'+roi_id)
-       
+        plotStatMT(FA, stats_pcr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'brain_only_'+sub+'_'+roi_id)
+        plotStatMT(FA, stats_catp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'brain_only_'+sub+'_'+roi_id)
+    
         print("-Save excel")
         saveExcel (FA, stats_pcr, stats_catp, 'PCr', 'cATP', sub_par['output_dir'], sufix=sub+'_'+roi_id)
     else:
@@ -230,22 +202,7 @@ if __name__ == '__main__':
                         help="0/1 to align 31P images",
                         type=int,
                         default = 0)
-                        
-    parser.add_argument("--skulltrip",
-                        help="0/1 to skulltr anat images",
-                        type=int,
-                        default = 1)
-
-    parser.add_argument("--warpMNI",
-                        help="0/1 to do third step analysis",
-                        type=int,
-                        default = 1)
-
-    parser.add_argument("--invwarpMNI",
-                        help="0/1 to do third step analysis",
-                        type=int,
-                        default = 1)
-
+   
     parser.add_argument("--createROI",
                         help="0/1 to do four step analysis",
                         type=int,

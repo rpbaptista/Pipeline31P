@@ -98,6 +98,45 @@ def add_prefix(fullpath, prefix=''):
 #        fullpath = os.path.join(split[0], split[1]+sufix)
 #
 #    return fullpath 
+def fsl_mask(image, mask, outfile):
+    masking = fsl.maths.ApplyMask()
+    masking.inputs.in_file= image
+    masking.inputs.mask_file = mask
+    masking.inputs.out_file = outfile
+    masking.inputs.output_type= "NIFTI"
+    
+    masking.run()
+    
+def fsl_anat(anat, T1_MNI_aligned_to_mni,brain_MNI_aligned_to_mni, path_field, inv_field, ref):
+    currentDirectory = os.getcwd()
+
+    split = os.path.split(brain_MNI_aligned_to_mni)
+    os.chdir(split[0])
+
+    cmd = "fsl_anat -i " + anat+" --noseg --nocrop --nocleanup --nosubcortseg --nosearch --noreorient --clobber -o " + os.path.join(split[0], "aux")
+    os.system(cmd)
+    shutil.copy(os.path.join(split[0], "aux.anat","T1_to_MNI_nonlin_coeff.nii.gz"), path_field)
+    shutil.copy(os.path.join(split[0], "aux.anat","MNI_to_T1_nonlin_field.nii.gz"), inv_field)
+
+    with gzip.open(os.path.join(split[0], "aux.anat","T1_biascorr.nii.gz"), 'rb') as f_in:
+        with open(os.path.join(split[0], "aux.anat","T1_biascorr.nii"), 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    shutil.copy(os.path.join(split[0], "aux.anat","T1_biascorr.nii"), T1_MNI_aligned_to_mni)
+    
+
+    with gzip.open(os.path.join(split[0], "aux.anat","T1_biascorr_brain.nii.gz"), 'rb') as f_in:
+        with open(os.path.join(split[0], "aux.anat","T1_biascorr_brain.nii"), 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    shutil.copy(os.path.join(split[0], "aux.anat","T1_biascorr_brain.nii"), brain_MNI_aligned_to_mni)
+
+    os.chdir(currentDirectory)
+
+    #os.system("rm -rf ")
+def bias_correction(anat):
+    fastr = fsl.FAST()
+    fastr.inputs.in_files = example_data(anat)
+    fastr.inputs.output_biascorrected(add_prefix(anat,'m'))
+    out = fastr.run() 
 
 def coreg_imgs(target_filter, source, all_files1 , all_files2, prefix):
     for i in range(len(all_files1)):
@@ -117,6 +156,7 @@ def normalize(anat, ref):
     fnt = fsl.FNIRT()
     res = fnt.run(ref_file=ref, in_file=anat) 
     return res
+
 def copy_files(array_path_origin, array_path_dest):
     for i in range(len(array_path_origin)):
         shutil.copy(array_path_origin[i], array_path_dest[i])
@@ -162,6 +202,7 @@ def BET(image_path, th=None):
     btr.inputs.output_type='NIFTI_GZ'
     btr.inputs.out_file = image_path.replace('.nii', '_brain.nii.gz')
     res = btr.run() 
+
 def find_realign_matrix(directory):
         
     count = 0
