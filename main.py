@@ -15,10 +15,11 @@ import argparse
 import numpy as np
 import nibabel as nib
 import sys, os
-import ants
+#import ants
 import pandas as pd
 from nipype.interfaces import spm
 from nipype import config
+import matplotlib.pyplot as plt
 
 # insert at 1, 0 is the script path (or '' in REPL)
 sys.path.append(os.path.join(sys.path[0],'../Utils/'))
@@ -28,26 +29,28 @@ sys.path.append(os.path.join(sys.path[0],'./parameters/'))
     
 # Import homemade
 #from metrics import statisticsImage
-from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel
+from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel, readExcel
 from metrics import ListStatistics
 
 #from utilsEval import generateSaveGraphIntensityFA, computeStatistics
 from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
 from metrics import statisticsImage
-from argsPipeline import argPipeline
+from utils_own.argsPipeline import argPipeline
+from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask
+
 # Set SPM path
 #matlab_cmd = '/volatile/softwares/standalone_spm/spm12/run_spm12.sh /volatile/softwares/MATLAB/MATLAB_Compiler_Runtime/v713/ script'
 #spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
+#spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
   
 def run_pipeline(sub,roi_id,args):
   
 
     sub_par = INITIALIZATION[sub]
+    calib = INITIALIZATION['calibration']
     roi = INITIALIZATION['roi'][roi_id]
-    
       
     print("******************************** 31P MT pipeline  - v1.0************************")
     print('--------------------------'+sub+'--'+roi_id+'---------------------------------')
@@ -67,9 +70,7 @@ def run_pipeline(sub,roi_id,args):
 
     warp_file = resliced_1H_MNI_brain.replace('.nii', '_warpcoef.nii')
 
-    nii = nib.load(createPath(sub_par['31P_PCr'][0], sub_par['subject_dir']))
-    header = nii.header
-   
+     
     img_PCr = openArrayImages(sub_par['31P_PCr'], sub_par['subject_dir'])
     img_cATP = openArrayImages(sub_par['31P_cATP'], sub_par['subject_dir'])
   
@@ -124,7 +125,9 @@ def run_pipeline(sub,roi_id,args):
         img_filter_PCr = median_filter_images(img_PCr)
         img_filter_cATP = median_filter_images(img_cATP)
         
-
+        nii = nib.load(createPath(sub_par['31P_PCr'][0], sub_par['subject_dir']))
+        header = nii.header
+  
         print("--Saved filter images...")
         saveArrayNifti(img_filter_PCr,output_filter_path_PCr, header)
         saveArrayNifti(img_filter_cATP,output_filter_path_cATP, header)
@@ -155,7 +158,10 @@ def run_pipeline(sub,roi_id,args):
         mask = aggregate_mask(roi,  INITIALIZATION['atlas']['path_cor'], mask_mni)
         labels = get_labels(INITIALIZATION['atlas'],'labels_cor-xml')
         print("-- This ROI contains")
-        print(labels.loc[roi]['#text'])
+        roi_label = roi.copy()
+        roi_label[:] = [number - 1 for number in roi]
+
+        print(labels.loc[roi_label]['#text'])
         print("--Apply individual inverse transformation to MNI")
         apply_warp(mask_mni, INITIALIZATION['template']['mni_brain'], warp_file.replace('.nii', '_inverse.nii'), out_file=mask_volunteer, forceNii=True)
         apply_warp(resliced_1H_MNI_brain, INITIALIZATION['template']['mni_brain'], warp_file, prefix='warp')
@@ -186,7 +192,7 @@ def run_pipeline(sub,roi_id,args):
         
         print("-Save images")
         
-        plotStatMT(FA, listStatistics_PCr, 'PCr', 'cATP', sub_par['output_dir'], prefix = 'b_'+sub+'_'+roi_id)
+        plotStatMT(FA, listStatistics_PCr,  'PCr', 'cATP', sub_par['output_dir'], prefix = 'b_'+sub+'_'+roi_id)
         plotStatMT(FA, listStatistics_cAtp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'b_'+sub+'_'+roi_id)
     
         print("-Save excel")
@@ -194,12 +200,51 @@ def run_pipeline(sub,roi_id,args):
     else:
         print("-Skipped compute Statistics")
 
+    if (args.quantification == 1):
+        print("-Quantification")
+
+        print("-- Computing model")
+
+        # Open images
+        phantom = np.squeeze(openArrayImages([calib['phantom_path']]))
+        mask = np.squeeze(openArrayImages([calib['mask_path']]))
+
+        # slice
+        phantom = phantom[:,:,calib['slice'][0]:calib['slice'][1]].T
+       
+        #Compute model
+        signal_m = meanMask(phantom, mask)
+        alpha_cATP = getCoefficient_T1_T2(signal = signal_m, 
+                                calib = calib,
+                                in_met = 'Pbs',
+                                out_met= 'cATP')
+        alpha_PCr = getCoefficient_T1_T2(signal = signal_m, 
+                                calib = calib,
+                                in_met = 'Pbs',
+                                out_met= 'PCr')
+        
+        # read data
+        listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'PCr')
+        listStatistics_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'cATP')
+    
+        #print(listStatistics_PCr.columns )
+        # Apply model
+        print("-- Applying model")
+
+        print("PCr concentration [mM]: \n",listStatistics_PCr['mean_metabolite']/alpha_PCr)
+        print("cAtp concentration [mM]: \n",listStatistics_cAtp['mean_metabolite']/alpha_cATP)
+        
+        
+    else:
+        print("-Skipped quantification")
 
     print("--Sucess--")
 
 
 if __name__ == '__main__':
 # Treat arguments
+    spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--sub",
                         help="which subject",
@@ -229,6 +274,12 @@ if __name__ == '__main__':
                         help="0/1 to do four step analysis",
                         type=int,
                         default = 1)
+    
+    parser.add_argument("--quantification",
+                        help="0/1 to do four step analysis",
+                        type=int,
+                        default = 1)
+
 
     parser.add_argument("--BET",
                         help="0/1 to do four step analysis",

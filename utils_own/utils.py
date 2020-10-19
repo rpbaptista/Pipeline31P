@@ -18,6 +18,7 @@ import shutil
 import gzip
 from nipype.interfaces.ants.segmentation import BrainExtraction
 
+
 def extract_brain(anat,template, probability):
     brainextraction = BrainExtraction()
     brainextraction.inputs.dimension = 3
