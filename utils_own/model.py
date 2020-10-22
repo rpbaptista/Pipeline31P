@@ -1,5 +1,30 @@
+# author: Renata Porciuncula Baptista
+# e-mail: renata.porciunculabaptista@cea.fr
+
+
 import numpy as np
 import math 
+
+#def ratio(Mt):
+#def getA()
+def magnetization_AB(A, M0, C):
+    A_inv = np.ligalg.inv(A)
+
+    return np.exp(A*t)*[M0+ A_inv*C] - A_inv*C
+
+
+def equation_Mt_simp(M0, deltaT, N, T1, TR, Kf):
+    Mt = np.zeros(N)
+    Mt[0] = M0
+    
+    for i in range(max(t.shape)-1):
+        
+        num = deltaT*M0/T1 + Mt[i]
+        den = 1 + deltaT/T1 +deltaT*Kf
+        Mt[i+1] =  num/den
+
+    return Mt
+
 
 def signal_equation(TR, M0, alpha_deg, T1):
     alpha_rad = math.radians(alpha_deg)

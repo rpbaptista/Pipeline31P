@@ -29,7 +29,7 @@ sys.path.append(os.path.join(sys.path[0],'./parameters/'))
     
 # Import homemade
 #from metrics import statisticsImage
-from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel, readExcel
+from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel, readExcel, appendExcel
 from metrics import ListStatistics
 
 #from utilsEval import generateSaveGraphIntensityFA, computeStatistics
@@ -37,12 +37,13 @@ from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
 from metrics import statisticsImage
 from utils_own.argsPipeline import argPipeline
-from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask
+from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask, getKf
+from utils_own.model import equation_Mt_simp
 
 # Set SPM path
 #matlab_cmd = '/volatile/softwares/standalone_spm/spm12/run_spm12.sh /volatile/softwares/MATLAB/MATLAB_Compiler_Runtime/v713/ script'
 #spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-#spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
+spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
   
 def run_pipeline(sub,roi_id,args):
@@ -227,13 +228,20 @@ def run_pipeline(sub,roi_id,args):
         listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'PCr')
         listStatistics_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'cATP')
     
-        #print(listStatistics_PCr.columns )
         # Apply model
         print("-- Applying model")
 
-        print("PCr concentration [mM]: \n",listStatistics_PCr['mean_metabolite']/alpha_PCr)
-        print("cAtp concentration [mM]: \n",listStatistics_cAtp['mean_metabolite']/alpha_cATP)
-        
+        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
+        concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
+        print(concentrations)
+        appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+        print("-- Flux")
+        t = np.arange(0.000,40,0.1)
+        rangeK = np.arange(0.0,1,0.01)
+        k, error = getKf(rangeK, list(concentrations['PCr concentration [mM]'])[-1], t, concentrations['PCr concentration [mM]'][0], calib['PCr']['T1'])
+        print(k, error)
+    
+
         
     else:
         print("-Skipped quantification")

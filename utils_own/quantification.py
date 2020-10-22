@@ -7,6 +7,17 @@ sys.path.append(os.path.join(sys.path[0],'./utils_own/'))
 from utils_own.model import * 
 from scipy.optimize import curve_fit
 
+def getKf(rangeK, Msreal, t, Mc, T1):
+    error = np.zeros(rangeK.shape)
+    for i in range(max(rangeK.shape)):
+    #    print(getMs(t, Mc, T1, rangeK[i]), Msreal)
+        error[i] = np.abs(Msreal - getMs(t, Mc, T1, rangeK[i]))
+    ind = np.argmin(error)
+    return rangeK[ind], error
+
+def getMs(t, Mc, T1, Kf):
+    Mt = equation_Mt_simp(Mc, t, T1, Kf)
+    return Mt[-1]
 
 def meanMask(image, mask):
     mask = mask/np.max(mask)

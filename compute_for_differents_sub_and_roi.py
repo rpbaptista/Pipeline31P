@@ -9,23 +9,26 @@ from parameters.initialization import INITIALIZATION
 from utils_own.argsPipeline import argPipeline
 from main import run_pipeline 
 
-subs = ['sub01','sub02','sub03']
+subs = ['sub00_y','sub01_y','sub02_y','sub03_y']
+#subs = [ 'sub03_y']
 #rois = ['cortical_up','cortical_down', 'cortical_in']
 rois = ['cortical_down']
 
 args = argPipeline(alignAnat=0,
                     align31P=0,
                     createROI=0,
-                    computeStatistics=0,
+                    computeStatistics=1,
                     quantification=1, 
                     BET = True)
 
 args_bck = args
 firstRun = True
-for roi in rois:
-    for sub in subs:
-        run_pipeline(sub,roi,args)
+for sub in subs:
+    args = args_bck
+    firstRun = True
 
+    for roi in rois:
+        run_pipeline(sub,roi,args)
         if firstRun == True:
             firstRun = False
             args.alignAnat = 0
