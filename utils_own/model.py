@@ -7,6 +7,17 @@ import math
 
 #def ratio(Mt):
 #def getA()
+
+def getW1fromFAandTau(FA,tau):
+    """
+    w1 = rapportgyroB1
+    tau in sec
+    FA in deg
+    """
+    FA_rad = np.radians(FA)
+    W1 = FA_rad/tau
+    return W1
+
 def magnetization_AB(A, M0, C):
     A_inv = np.ligalg.inv(A)
 

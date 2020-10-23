@@ -10,8 +10,6 @@ import numpy as np
 
 INITIALIZATION = dict()
 
-
-
 INITIALIZATION['sub00_y'] = {
     'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-08-28/' ,
     'anat_1H' : 'fl200200_20200819_001_012_mprage_sag_T1_160sl_iPAT2.nii', # Florent M.
@@ -109,10 +107,11 @@ INITIALIZATION['calibration'] ={
     'Pi' :  {'T1': 3.19,
             'T2e': 0.011} , # verify
     'Pbs' : {'T1': 6.8,
-    '          T2e': 0.150}, # verify
+            'T2e' : 0.150}, # verify
     'TR' : 0.250,
     'FA' : 20,
     'TE' : 0.005,
+    'tau' : 0.8,
 
 }
 

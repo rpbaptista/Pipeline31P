@@ -37,8 +37,9 @@ from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
 from metrics import statisticsImage
 from utils_own.argsPipeline import argPipeline
-from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask, getKf
-from utils_own.model import equation_Mt_simp
+from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask, getKf,getKab,getTheoricalValues
+from utils_own.model import getW1fromFAandTau
+from utils_own.bloch_equations import getMagMat, mag_signal_N
 
 # Set SPM path
 #matlab_cmd = '/volatile/softwares/standalone_spm/spm12/run_spm12.sh /volatile/softwares/MATLAB/MATLAB_Compiler_Runtime/v713/ script'
@@ -230,19 +231,26 @@ def run_pipeline(sub,roi_id,args):
     
         # Apply model
         print("-- Applying model")
-
+        FA_sub = np.asarray(sub_par['FA'])
         concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
         concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
         print(concentrations)
         appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+       
         print("-- Flux")
-        t = np.arange(0.000,40,0.1)
         rangeK = np.arange(0.0,1,0.01)
-        k, error = getKf(rangeK, list(concentrations['PCr concentration [mM]'])[-1], t, concentrations['PCr concentration [mM]'][0], calib['PCr']['T1'])
-        print(k, error)
-    
-
-        
+        ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
+#        k, error = getKf(rangeK, list(concentrations['PCr concentration [mM]'])[-1], t, concentrations['PCr concentration [mM]'][0], calib['PCr']['T1'])
+      #  Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP')
+       # print(Kpcr_catp)
+        Ma, Mb = getTheoricalValues(0.30, 0.45, [0,0,1], [0,0, 0.75], FA_sub, calib, 'PCr', 'cATP')
+        plt.plot(FA_sub, Ma, 'b:',label='PCr equation')
+        plt.plot(FA, listStatistics_PCr['mean_normalized'],'b^'   , label='PCR real')
+        plt.plot(FA_sub, Mb, 'r:', label='catp equation')
+        plt.plot(FA, listStatistics_cAtp['mean_normalized'] , 'r^'   , label='catp real')
+       
+        plt.legend()
+        plt.show()
     else:
         print("-Skipped quantification")
 
@@ -257,7 +265,7 @@ if __name__ == '__main__':
     parser.add_argument("--sub",
                         help="which subject",
                         type=str,
-                        default='sub01') 
+                        default='sub01_y') 
     parser.add_argument("--roi",
                         help="which roi",
                         type=str,  

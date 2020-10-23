@@ -4,33 +4,55 @@
 
 import numpy as np
 from scipy.linalg import expm
-def magnetization_signal( t, dwa, dwb, M0a, M0b, kab, kba,t_A, t_B, w1):
+
+def mag_signal_N (N, FA, TE, TR, A, C, M0):
+    
+    Rz = np.zeros((3,3))    
+    Rflip = yrot(FA)
+    Rflip = np.block([[Rflip,Rz],[Rz,Rflip]])
+    Moutput = np.zeros((6,N))
+
+    for i in range(N):
+        Mte = magnetization_signal( TE, A, C, M0 )
+        Moutput[:,i] = Mte
+        Mte = Rflip@Mte
+
+        Mtr = magnetization_signal( TR-TE, A, C, Mte )
+
+        M0 = Mtr
+
+    return Moutput
+
+def magnetization_signal( t, A,C, M0 ):
     
     """ Function to calculate transfer two pool based on  Bottomley et al 2002
-    Input: dwa,dwb rad/s
+    Input: dwa,dwb hz, times in s
              """
+    A_inv = np.linalg.inv(A)
+    
+    return (expm(A*t)@(M0+A_inv@C) - A_inv@C)
 
+def getMagMat(dfa, dfb, M0a, M0b, kab, kba, t_A, t_B, w1A, w1B):
     A = np.array(
-        ((-1/t_A['T2e']-kab,              dwa,                   0,       kba,         0,     0),
-        (-dwa,               - 1/t_A['T2e']-kab,                   w1,       0,          kba,   0),
-        (0,                             -w1,      -1/t_A['T1']-kab,       0,          0,    kba),
-        (kab,                            0,                    0,   -1/t_B['T2e']-kba,         dwb,           0,),
-        (0,                              kab,                  0,                  -dwb, -1/t_B['T2e']-kba,    w1),
-        (0,                              0,                    kab,                0,        -w1,    -1/t_B['T1']-kba))
+        ((-1/t_A['T2e']-kab,    2*np.pi*dfa,                0,              kba,                0,                     0),
+        ( -2*np.pi*(dfa),        -1/t_A['T2e']-kab,          w1A,               0,                kba,                    0),
+        (0,                         -w1A,             -1/t_A['T1']-kab,       0,                 0,                    kba),
+        (kab,                        0,                    0,         -1/t_B['T2e']-kba,    2*np.pi*(dfb),               0,),
+        (0,                         kab,                   0,            - 2*np.pi*(dfb),    -1/t_B['T2e']-kba,           w1B),
+        (0,                          0,                   kab,                0,               -w1B,             -1/t_B['T1']-kba))
     )
 
     C = np.array((0,0,abs_vec(M0a)/t_A['T1'],0,0,abs_vec(M0b)/t_B['T1']))
-    
-    
-    Ra = zrot(np.degrees(2*np.pi*dwa*t))
-    Rb = zrot(np.degrees(2*np.pi*dwb*t))
-    Rz = np.zeros((3,3))
-    Rflip = np.block([[Ra,Rz],[Rz,Rz]])
-    
-    A_inv = np.linalg.inv(A)
     M0 = np.concatenate((M0a, M0b)) 
-    
-    return (expm(A*t)@(M0+A_inv@C) - A_inv@C) @Rflip
+    #Ra = zrot(np.degrees(2*np.pi*dfa*t))
+    #Rb = zrot(np.degrees(2*np.pi*dfb*t))
+    #Rz = np.zeros((3,3))
+    #Rflip = np.block([[Ra,Rz],[Rz,Rb]])
+ 
+    return A, C, M0
+
+
+ 
 
 def srsignal(flip,T1,T2,TE,TR,dfreq):
     """ 	srsignal(flip,T1,T2,TE,TR,dfreq)

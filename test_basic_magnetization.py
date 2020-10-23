@@ -18,30 +18,45 @@ sys.path.append(os.path.join(sys.path[0],'./parameters/'))
     
 # Import homemade
 from utils_own.bloch_equations import *
+from utils_own.model import getW1fromFAandTau
+from utils_own.quantification import *
 from parameters.initialization import INITIALIZATION
 
 
 dt = 0.001
-t = np.arange(0,0.1,dt)
+t = np.arange(0,0.3,dt)
+
 N = np.max(t.shape)
 TE = INITIALIZATION['calibration']['TE']
 TR = INITIALIZATION['calibration']['TR']
 FA = INITIALIZATION['calibration']['FA']
+w1b = getW1fromFAandTau(INITIALIZATION['sub00_y']['FA'], INITIALIZATION['calibration']['tau'])
+w1a = 0
 t_A = INITIALIZATION['calibration']['PCr']
 t_B = INITIALIZATION['calibration']['cATP']
 w1 = 0
 kab = 0 #0.3
 kba = 0 #1.5
-
+Fa_sub = np.array(INITIALIZATION['sub01_y']['FA'])
 # Method 1 both together
-M0a = [1,0,0]
-M0b = [0.75,0,0]
+M0a = [0,0,1]
+M0b = [0,0,0.75]
 M = np.zeros((6, N))
-for i in range(N):
-    M[:,i] = magnetization_signal(t[i], 0, 300, M0a, M0b, kab, kba,t_A, t_B, w1)
- 
+Ma, Mb = getTheoricalValues(0.30, 0.45, [0,0,1], [0,0, 0.75],Fa_sub , INITIALIZATION['calibration'], 'PCr', 'cATP')
+plt.plot(Fa_sub,Ma[:], label = 'Mine: PCR Mz')
+plt.plot(Fa_sub, Mb[:], label = 'Mine: ATP Mz') # XY equal
+plt.legend()
+plt.show()
 
-# method 2 - separately - Works
+
+# # for i in range(N):
+#   #  Matp[:,i+1] = np.dot(Aatp,Matp[:,i])+batp
+#     M[:,i] = magnetization_signal(t[i], A, C, M0)
+#    # num = dt*C + M[:,i]
+#    # den = np.linalg.inv(np.eye(6) + dt*A)
+#   #  M[:,i] = den@num
+
+# #method 2 - separately - Works
 # Apcr, bpcr = freeprecess(T=dt,
 #                         T1=INITIALIZATION['calibration']['PCr']['T1'],
 #                         T2=INITIALIZATION['calibration']['PCr']['T2e'],
@@ -63,21 +78,21 @@ for i in range(N):
 
 
 
-Aatp, batp = freeprecess(T=dt,
-                        T1=INITIALIZATION['calibration']['cATP']['T1'],
-                        T2=INITIALIZATION['calibration']['cATP']['T2e'],
-                        df=300)
-Matp = np.zeros((3, N))
-Matp[:,0]= [0.75,0,0]
+# Aatp, batp = freeprecess(T=dt,
+#                         T1=INITIALIZATION['calibration']['cATP']['T1'],
+#                         T2=INITIALIZATION['calibration']['cATP']['T2e'],
+#                         df=300)
+# Matp = np.zeros((3, N))
+# Matp[:,0]= [0.75,0,0]
 
-for i in range(N-1):
-    Matp[:,i+1] = np.dot(Aatp,Matp[:,i])+batp
+# for i in range(N-1):
+#     Matp[:,i+1] = np.dot(Aatp,Matp[:,i])+batp
 
-plt.plot(t,Matp[0,:], label ='Freeprecess: ATP Mx')
-plt.plot(t,Matp[1,:], label = 'Freeprecess: ATP My')
-plt.plot(t,Matp[2,:], label = 'Freeprecess: ATP Mz')
-plt.plot(t,M[3,:], label ='Mine: ATP Mx, delta{0:.3f}'.format(np.sum(Matp[0,:]-M[0,:]))) # XY equal
-plt.plot(t,M[4,:], label = 'Mine: ATP My, delta{0:.3f}'.format(np.sum(Matp[1,:]-M[1,:]))) # XY equal
-plt.plot(t,M[5,:], label = 'Mine: ATP Mz, delta{0:.3f}'.format(np.sum(Matp[2,:]-M[2,:]))) # XY equal
-plt.legend()
-plt.show()
+# plt.plot(t,Matp[0,:], label ='Freeprecess: ATP Mx')
+# plt.plot(t,Matp[1,:], label = 'Freeprecess: ATP My')
+# plt.plot(t,Matp[2,:], label = 'Freeprecess: ATP Mz')
+# plt.plot(t,M[3,:], label ='Mine: ATP Mx, delta{0:.3f}'.format(np.sum(Matp[0,:]-M[3,:]))) # XY equal
+# plt.plot(t,M[4,:], label = 'Mine: ATP My, delta{0:.3f}'.format(np.sum(Matp[1,:]-M[4,:]))) # XY equal
+# plt.plot(t,M[5,:], label = 'Mine: ATP Mz, delta{0:.3f}'.format(np.sum(Matp[2,:]-M[5,:]))) # XY equal
+# plt.legend()
+# plt.show()

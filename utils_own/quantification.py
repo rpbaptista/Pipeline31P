@@ -5,7 +5,36 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.join(sys.path[0],'./utils_own/'))
 
 from utils_own.model import * 
+from utils_own.bloch_equations import * 
 from scipy.optimize import curve_fit
+
+def getMSE(a,b):
+    return np.sqrt(np.sum((a - b)**2))
+
+def getKab(range_kab,ratio, Mobs_a, FA_sub, calib, nameA, nameB):
+    error = np.zeros(range_kab.shape)
+    M0a = np.array([0,0,1])
+    M0b = np.array([0,0,1/ratio])
+    for i in range(range_kab.size):
+        print("Kab:{0}, Kba:{1}, 1/ratio:{2}".format(range_kab[i],ratio*range_kab[i],1/ratio))
+        M_a, M_b = getTheoricalValues(range_kab[i],ratio*range_kab[i], M0a, M0b, FA_sub, calib, nameA, nameB)
+        error[i] = getMSE(Mobs_a,M_a)
+    idx = np.argmin(error)
+    print(error)
+    return  range_kab[idx]
+
+def getTheoricalValues(kab, kba, M0a, M0b, FA_sub, calib, nameA, nameB):
+    w1b = getW1fromFAandTau(FA_sub, calib['tau'])
+    print("Intensity of field:{0} rad/s".format(w1b))
+    M_a = np.zeros(FA_sub.shape)
+    M_b = np.zeros(FA_sub.shape)
+    for i in range(FA_sub.size):  
+        A, C, M0 = getMagMat(0, 0, M0a, M0b, kab, kba, calib[nameA], calib[nameB], 0, w1b[i])
+        M = mag_signal_N(100, calib['FA'], calib['TE'], calib['TR'], A, C, M0)
+        M_a[i] = M[2,-1]
+        M_b[i] = M[5,-1]
+    return M_a, M_b
+
 
 def getKf(rangeK, Msreal, t, Mc, T1):
     error = np.zeros(rangeK.shape)
@@ -30,6 +59,7 @@ def getCoefficient (signal, calib, in_met, out_met):
     """
     Inputs: calib must be a dictionary with the keys true_value, fa, t1
     M0 = K* [concentration]
+    S = M0 * pondT1T2
     """
     print("... warning: only considering T1")
     signal_under_concentration = signal/calib['true_value']
@@ -42,20 +72,23 @@ def getCoefficient (signal, calib, in_met, out_met):
                                                  M0= K0,
                                                  alpha_deg=  calib['FA'],
                                                  T1=  calib[out_met]['T1'])
-    return  K0_times_T1_pond
+    return  K0_times_T1_pond 
 
 def getCoefficient_T1_T2 (signal, calib, in_met, out_met):
     """
     Inputs: calib must be a dictionary with the keys true_value, fa, t1
+    M0 = K* [concentration]
+    S = M0 * pondT1T2
     """
+
     print("... warning: considering T1 and T2")
     signal_under_concentration = signal/calib['true_value']
-    M0_under_concentration = getM0fromSignal(signal= signal_under_concentration,
+    M0_under_concentration = getM0fromSignal_T1_T2(signal= signal_under_concentration,
                         alpha_deg  = calib['FA'],
                         T1 = calib[in_met]['T1'],
-                        TR = calib['TR']
-                  #      T2 = calib[in_met]['T2'],
-                   #     TE = calib['TE']
+                        TR = calib['TR'],
+                        T2 = calib[in_met]['T2e'],
+                        TE = calib['TE']
                    )
   #  M0_under_concentration = M0/calib['true_value']
     M0_under_concentration_times_T1_pond = signal_equation_T1_T2(TR = calib['TR'],
