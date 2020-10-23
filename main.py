@@ -241,9 +241,11 @@ def run_pipeline(sub,roi_id,args):
         rangeK = np.arange(0.0,1,0.01)
         ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
 #        k, error = getKf(rangeK, list(concentrations['PCr concentration [mM]'])[-1], t, concentrations['PCr concentration [mM]'][0], calib['PCr']['T1'])
-      #  Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP')
-       # print(Kpcr_catp)
+        Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP')
+        print(Kpcr_catp)
         Ma, Mb = getTheoricalValues(0.30, 0.45, [0,0,1], [0,0, 0.75], FA_sub, calib, 'PCr', 'cATP')
+        Ma = Ma/np.max(Ma)
+        Mb = Mb/np.max(Mb)
         plt.plot(FA_sub, Ma, 'b:',label='PCr equation')
         plt.plot(FA, listStatistics_PCr['mean_normalized'],'b^'   , label='PCR real')
         plt.plot(FA_sub, Mb, 'r:', label='catp equation')

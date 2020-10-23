@@ -111,7 +111,7 @@ INITIALIZATION['calibration'] ={
     'TR' : 0.250,
     'FA' : 20,
     'TE' : 0.005,
-    'tau' : 0.8,
+    'tau' : 0.08,
 
 }
 

@@ -16,16 +16,14 @@ def getKab(range_kab,ratio, Mobs_a, FA_sub, calib, nameA, nameB):
     M0a = np.array([0,0,1])
     M0b = np.array([0,0,1/ratio])
     for i in range(range_kab.size):
-        print("Kab:{0}, Kba:{1}, 1/ratio:{2}".format(range_kab[i],ratio*range_kab[i],1/ratio))
         M_a, M_b = getTheoricalValues(range_kab[i],ratio*range_kab[i], M0a, M0b, FA_sub, calib, nameA, nameB)
+        M_a = M_a/np.max(M_a)
         error[i] = getMSE(Mobs_a,M_a)
     idx = np.argmin(error)
-    print(error)
     return  range_kab[idx]
 
 def getTheoricalValues(kab, kba, M0a, M0b, FA_sub, calib, nameA, nameB):
     w1b = getW1fromFAandTau(FA_sub, calib['tau'])
-    print("Intensity of field:{0} rad/s".format(w1b))
     M_a = np.zeros(FA_sub.shape)
     M_b = np.zeros(FA_sub.shape)
     for i in range(FA_sub.size):  
