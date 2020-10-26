@@ -15,10 +15,10 @@ subs = ['sub00_y','sub01_y','sub02_y','sub03_y']
 rois = ['cortical_down']
 
 args = argPipeline(alignAnat=0,
-                    align31P=0,
+                    align31P=1,
                     createROI=0,
-                    computeStatistics=1,
-                    quantification=1, 
+                    computeStatistics=0,
+                    quantification=0, 
                     BET = True)
 
 args_bck = args

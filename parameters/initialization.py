@@ -91,6 +91,65 @@ INITIALIZATION['sub03_y'] = {
     'hand' :'R' ,
 }
 
+#OLD VOLUNTEERS
+INITIALIZATION['sub01_o'] = {
+    'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-10-23/' ,
+    'anat_1H' : 'fb200436_20201023_001_019_t1_mp2rage_sag_iso0_75mm_t1_mp2rage_sag_iso0_75mm_UNI-DEN.nii',# Me
+    'anat_31P' : 'fb200436_20201023_001_005_t1_mpr_tra_iso2_0mm.nii', 
+    '31P_PCr' :  ['meas_MID153_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID10420_filter_hamming2_freq_0_echo_0.nii',
+                    'meas_MID156_31P_MT_cATP_FA15_PCr_TPI_P3600_RES12_TR250_TE5_FID10423_filter_hamming2_freq_0_echo_0.nii',
+                    'meas_MID154_31P_MT_cATP_FA30_PCr_TPI_P3600_RES12_TR250_TE5_FID10421_filter_hamming2_freq_0_echo_0.nii',
+                    'meas_MID155_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID10422_filter_hamming2_freq_0_echo_0.nii'],
+    '31P_cATP' :  ['meas_MID153_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID10420_filter_hamming2_freq_-300_echo_0.nii',
+                    'meas_MID156_31P_MT_cATP_FA15_PCr_TPI_P3600_RES12_TR250_TE5_FID10423_filter_hamming2_freq_-300_echo_0.nii',
+                    'meas_MID154_31P_MT_cATP_FA30_PCr_TPI_P3600_RES12_TR250_TE5_FID10421_filter_hamming2_freq_-300_echo_0.nii',
+                    'meas_MID155_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID10422_filter_hamming2_freq_-300_echo_0.nii'],
+    'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-23/', 'ProcessedData/31P_Volunteer/2020-10-23/imgs/'],
+    'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-23/results',
+    'FA' : [0,15,30,60],
+    'birthdate' : '',
+    'hand' :'R' ,
+}
+
+INITIALIZATION['sub02_y'] = {
+   'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-10-30/' ,
+    'anat_1H' : '',
+    'anat_31P' : '', # Me
+    '31P_PCr' :  ['',
+                    '',
+                    '',
+                    ''],
+    '31P_cATP' :  ['',
+                    '',
+                    '',
+                    ''],
+    'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-30/', 'ProcessedData/31P_Volunteer/2020-10-30/imgs/'],
+    'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-30/results',
+    'FA' : [0,15,30,60],
+    'birthdate' : '',
+    'hand' :'R' ,
+}
+
+INITIALIZATION['sub03_y'] = {
+   'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-10-30/' ,
+    'anat_1H' : '',
+    'anat_31P' : '', # Me
+    '31P_PCr' :  ['',
+                    '',
+                    '',
+                    ''],
+    '31P_cATP' :  ['',
+                    '',
+                    '',
+                    ''],
+    'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-30/', 'ProcessedData/31P_Volunteer/2020-10-30/imgs/'],
+    'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-30/results',
+    'FA' : [0,15,30,60],
+    'birthdate' : '',
+    'hand' :'R' ,
+}
+
+
 INITIALIZATION['calibration'] ={
   #  'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_final.tif',
   #  'phantom_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/meas_MID65_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9651_filter_hamming2_freq_0_echo_0.nii',
