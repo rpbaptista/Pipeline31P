@@ -90,9 +90,14 @@ def run_pipeline(sub,roi_id,args):
     output_filter_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'measFilter'])
     output_filter_path_PCr_r = add_prefix(output_filter_path_PCr, 'r')
     output_filter_path_cATP_r = add_prefix(output_filter_path_cATP, 'r')
+    output_filter_path_cATP_r_2 = add_prefix(output_filter_path_cATP, '2r')
 
     output_realign_path_PCr = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'rmeas'])
     output_realign_path_cATP = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'rmeas'])
+    output_realign_path_PCr_2 = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'r2meas'])
+    output_realign_path_cATP_2 = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'r2meas'])
+    r_final_realign_path_cATP = add_prefix(output_realign_path_cATP_2, 'catp_anat31Pr')
+    r_final_realign_path_PCr = add_prefix(output_realign_path_PCr_2, 'catp_anat31Pr')
     output_realign_path_PCr_2 = createPathArray(sub_par['31P_PCr'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'r2meas'])
     output_realign_path_cATP_2 = createPathArray(sub_par['31P_cATP'], sub_par['subject_dir'], sub_par['replaceFolder'], ['meas', 'r2meas'])
 
@@ -123,31 +128,42 @@ def run_pipeline(sub,roi_id,args):
     if (args.align31P == 1):
         print("-Aligned 31P to 31P-1H-MNI")
 
-        print("--Filter images: PCr images...")
+        print("--Filter images: cATP images...")
         img_filter_PCr = median_filter_images(img_PCr)
         img_filter_cATP = median_filter_images(img_cATP)
         
         nii = nib.load(createPath(sub_par['31P_PCr'][0], sub_par['subject_dir']))
-        header = nii.header
+        header_PCr = nii.header
+        nii = nib.load(createPath(sub_par['31P_cATP'][0], sub_par['subject_dir']))
+        header_cATP = nii.header
   
         print("--Saved filter images...")
-        saveArrayNifti(img_filter_PCr,output_filter_path_PCr, header)
-        saveArrayNifti(img_filter_cATP,output_filter_path_cATP, header)
-
-        copy_files(output_original_path_PCr,output_realign_path_PCr)
-        copy_files(output_original_path_cATP,output_realign_path_cATP)
-
+        saveArrayNifti(img_filter_PCr,output_filter_path_PCr, header_PCr)
+        saveArrayNifti(img_filter_cATP,output_filter_path_cATP, header_cATP)
+        
+        print("--Align 31P with 31P using PCR (more signal)...")
+        calc_coreg_imgs(output_filter_path_PCr[0], output_original_path_PCr, os.path.join(sub_par['output_dir'],'31P_31P_Pcr.mat'))
+        apply_transf_imgs(output_original_path_PCr, os.path.join(sub_par['output_dir'],'inverse_31P_31P_Pcr.mat') , output_realign_path_PCr)
+        apply_transf_imgs(output_original_path_cATP, os.path.join(sub_par['output_dir'],'inverse_31P_31P_Pcr.mat') , output_realign_path_cATP)
+       # apply_transf_imgs(output_filter_path_cATP, os.path.join(sub_par['output_dir'],'inverse_31P_31P_Pcr.mat') , output_filter_path_cATP_r, True)
+       
+       
         print("--Apply anat 31P to H transformation in all other 31P...")
-
-        apply_transf_imgs(output_filter_path_PCr, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_filter_path_PCr_r, True)
-        apply_transf_imgs(output_filter_path_cATP, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_filter_path_cATP_r, True)
+       # apply_transf_imgs(output_filter_path_cATP_r, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_filter_path_cATP_r_2, True)
 
         apply_transf_imgs(output_realign_path_PCr, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_realign_path_PCr_2, True)
         apply_transf_imgs(output_realign_path_cATP, os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , output_realign_path_cATP_2, True)
 
-        print("--Realing images...")
-        coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP_r, output_realign_path_PCr_2,output_realign_path_cATP_2, 'catp_anat31Pr')
-   #     coreg_imgs(resliced_31P_into_MNI_1H, output_filter_path_cATP_r, output_realign_path_PCr,output_realign_path_cATP, 'anat31Pr')
+        print("--Realing images using cATP as reference (less muscle)...")
+     #   calc_coreg_imgs(resliced_31P_into_MNI_1H, [output_realign_path_cATP_2], os.path.join(sub_par['output_dir'],'test_anat.mat'))
+        coreg_imgs(resliced_31P_into_MNI_1H, output_realign_path_cATP_2[0], output_realign_path_PCr_2+output_realign_path_cATP_2, 'catp_anat31Pr')
+
+       
+      #  apply_transf_imgs(output_realign_path_cATP_2, os.path.join(sub_par['output_dir'],'inverse_test_anat.mat') , r_final_realign_path_cATP,True )
+      #  apply_transf_imgs(output_realign_path_PCr_2, os.path.join(sub_par['output_dir'],'inverse_test_anat.mat') , r_final_realign_path_PCr,True)
+
+       # reslice(resliced_31P_into_MNI_1H, r_final_realign_path_cATP)
+       # reslice(resliced_31P_into_MNI_1H, r_final_realign_path_PCr)
 
     else:
         print("-Skipped Aligned 31P to 31P-1H-MNI.")
@@ -174,9 +190,7 @@ def run_pipeline(sub,roi_id,args):
     
     if (args.computeStatistics == 1):
         print("-Compute mean in ROI")
-        r_final_realign_path_cATP = add_prefix(output_realign_path_cATP_2, 'catp_anat31Pr')
-        r_final_realign_path_PCr = add_prefix(output_realign_path_PCr_2, 'catp_anat31Pr')
-        
+         
         vols_cATP = openArrayImages(r_final_realign_path_cATP)
         vols_PCr = openArrayImages(r_final_realign_path_PCr)
         mask_volunteer = openArrayImages(mask_volunteer)

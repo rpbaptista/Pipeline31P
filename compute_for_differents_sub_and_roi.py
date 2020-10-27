@@ -10,21 +10,18 @@ from utils_own.argsPipeline import argPipeline
 from main import run_pipeline 
 
 subs = ['sub00_y','sub01_y','sub02_y','sub03_y']
-#subs = [ 'sub03_y']
+#subs = ['sub02_y']
+#subs = [ 'sub00_y']
 #rois = ['cortical_up','cortical_down', 'cortical_in']
 rois = ['cortical_down']
 
-args = argPipeline(alignAnat=0,
-                    align31P=1,
-                    createROI=0,
-                    computeStatistics=0,
-                    quantification=0, 
-                    BET = True)
-
-args_bck = args
-firstRun = True
 for sub in subs:
-    args = args_bck
+    args = argPipeline(alignAnat=0,
+                    align31P=0,
+                    createROI=0,
+                    computeStatistics=1,
+                    quantification=1, 
+                    BET = True)
     firstRun = True
 
     for roi in rois:

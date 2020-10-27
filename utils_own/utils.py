@@ -143,14 +143,14 @@ def bias_correction(anat):
     fastr.inputs.output_biascorrected(add_prefix(anat,'m'))
     out = fastr.run() 
 
-def coreg_imgs(target_filter, source, all_files1 , all_files2, prefix):
-    for i in range(len(all_files1)):
-        coreg = spm.Coregister()
-        coreg.inputs.source = source[i]
-        coreg.inputs.target = target_filter
-        coreg.inputs.apply_to_files = [all_files1[i],all_files2[i]]
-        coreg.inputs.out_prefix = prefix
-        coreg.run() 
+def coreg_imgs(target_filter, source, all_files, prefix):
+   # for i in range(len(all_files1)):
+    coreg = spm.Coregister()
+    coreg.inputs.source = source
+    coreg.inputs.target = target_filter
+    coreg.inputs.apply_to_files = all_files
+    coreg.inputs.out_prefix = prefix
+    coreg.run() 
 
 def normalize(anat, ref):
    #  norm12 = spm.Normalize12()

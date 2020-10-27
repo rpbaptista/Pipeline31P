@@ -111,7 +111,7 @@ INITIALIZATION['sub01_o'] = {
     'hand' :'R' ,
 }
 
-INITIALIZATION['sub02_y'] = {
+INITIALIZATION['sub02_o'] = {
    'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-10-30/' ,
     'anat_1H' : '',
     'anat_31P' : '', # Me
@@ -130,7 +130,7 @@ INITIALIZATION['sub02_y'] = {
     'hand' :'R' ,
 }
 
-INITIALIZATION['sub03_y'] = {
+INITIALIZATION['sub03_o'] = {
    'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-10-30/' ,
     'anat_1H' : '',
     'anat_31P' : '', # Me
