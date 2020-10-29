@@ -44,9 +44,9 @@ from utils_own.bloch_equations import getMagMat, mag_signal_N
 # Set SPM path
 #matlab_cmd = '/volatile/softwares/standalone_spm/spm12/run_spm12.sh /volatile/softwares/MATLAB/MATLAB_Compiler_Runtime/v713/ script'
 #spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
+#spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
+import sys
 
-  
 def run_pipeline(sub,roi_id,args):
   
 
@@ -57,6 +57,15 @@ def run_pipeline(sub,roi_id,args):
     print("******************************** 31P MT pipeline  - v1.0************************")
     print('--------------------------'+sub+'--'+roi_id+'---------------------------------')
 
+    is_windows = hasattr(sys, 'getwindowsversion')
+    if is_windows:
+        sub_par['subject_dir']  = sub_par['subject_dir'].replace('/neurospin/ciclops/', 'X:/')
+        sub_par['output_dir']  = sub_par['output_dir'].replace('/neurospin/ciclops/', 'X:/')
+        calib['mask_path'] = calib['mask_path'].replace('/neurospin/ciclops/', 'X:/')
+        calib['phantom_path'] = calib['phantom_path'].replace('/neurospin/ciclops/', 'X:/')
+        print("",  sub_par['subject_dir'],  sub_par['output_dir'])
+    else:
+        spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
     # now, that I have the final mask I need to 
     print("-Load images")
     
@@ -252,12 +261,14 @@ def run_pipeline(sub,roi_id,args):
         appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
        
         print("-- Flux")
-        rangeK = np.arange(0.0,1,0.01)
+        rangeK = np.arange(0.0,2,0.05)
         ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
-#        k, error = getKf(rangeK, list(concentrations['PCr concentration [mM]'])[-1], t, concentrations['PCr concentration [mM]'][0], calib['PCr']['T1'])
-        Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP')
-        print(Kpcr_catp)
-        Ma, Mb = getTheoricalValues(0.30, 0.45, [0,0,1], [0,0, 0.75], FA_sub, calib, 'PCr', 'cATP')
+        Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_normalized'])
+
+        print("-- is:{0} s-1".format(Kpcr_catp))
+
+        Ma, Mb = getTheoricalValues(Kpcr_catp, Kpcr_catp*ratio, [0,0,1], [0,0, 1/ratio], FA_sub, calib, 'PCr', 'cATP')
+        print(Ma, Mb)
         Ma = Ma/np.max(Ma)
         Mb = Mb/np.max(Mb)
         plt.plot(FA_sub, Ma, 'b:',label='PCr equation')

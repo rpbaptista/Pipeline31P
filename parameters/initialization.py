@@ -24,13 +24,14 @@ INITIALIZATION['sub00_y'] = {
                      'meas_MID295_31P_MT_cATP_FA360_PCr_TPI_P3600_RES12_TR250_TE5_FID4939_filter_hamming2_freq_-300_echo_0.nii'],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-08-28/', 'ProcessedData/31P_Volunteer/2020-08-28/imgs/'],
     'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-08-28/results',
-    'FA' : [0,10,60,360],
+    'FA' : [0,20,120,720],
     'birthdate' : '2001-03-19',
     'hand' : 'R' ,
 }
 
 INITIALIZATION['sub01_y'] = {
     'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-09-24/' ,
+
     'anat_1H' : 'cb200147_20200924_002_009_t1_mp2rage_sag_iso0_75mm_t1_mp2rage_sag_iso0_75mm_UNI-DEN.nii', # Me
     'anat_31P' : 'cb200147_20200924_001_005_t1_mpr_tra_iso2_0mm.nii',
     '31P_PCr' :  ['meas_MID311_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID7295_filter_hamming2_freq_0_echo_0.nii',
@@ -42,8 +43,8 @@ INITIALIZATION['sub01_y'] = {
                     'meas_MID313_31P_MT_cATP_FA30_PCr_TPI_P3600_RES12_TR250_TE5_FID7297_filter_hamming2_freq_-300_echo_0.nii',
                      'meas_MID314_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID7298_filter_hamming2_freq_-300_echo_0.nii'],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-09-24/', 'ProcessedData/31P_Volunteer/2020-09-24/imgs/'],
-    'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-09-24/results',
-    'FA' : [0,10,30,60],
+    'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-09-24/results',    
+    'FA' : [0,20,60,120],
     'birthdate' : '1992-11-15',
     'hand' : 'L',
 
@@ -65,7 +66,7 @@ INITIALIZATION['sub02_y'] = {
                      'meas_MID235_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID9363_filter_hamming2_freq_-300_echo_0.nii'],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-09/', 'ProcessedData/31P_Volunteer/2020-10-09/imgs/'],
     'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-09/results',
-    'FA' : [0,10,15,30,60],
+    'FA' : [0,20,30,60,120],
     'birthdate' : '1992-08-12',
     'hand' : 'R',
 }
@@ -86,7 +87,7 @@ INITIALIZATION['sub03_y'] = {
                     'meas_MID215_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID10248_filter_hamming2_freq_-300_echo_0.nii'],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-20/', 'ProcessedData/31P_Volunteer/2020-10-20/imgs/'],
     'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-20/results',
-    'FA' : [0,10,15,30,60],
+    'FA' : [0,20,30,60,120],
     'birthdate' : '1998-03-21',
     'hand' :'R' ,
 }
@@ -106,7 +107,7 @@ INITIALIZATION['sub01_o'] = {
                     'meas_MID155_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID10422_filter_hamming2_freq_-300_echo_0.nii'],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-23/', 'ProcessedData/31P_Volunteer/2020-10-23/imgs/'],
     'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-23/results',
-    'FA' : [0,15,30,60],
+    'FA' : [0,30,60,120],
     'birthdate' : '',
     'hand' :'R' ,
 }
@@ -125,7 +126,7 @@ INITIALIZATION['sub02_o'] = {
                     ''],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-30/', 'ProcessedData/31P_Volunteer/2020-10-30/imgs/'],
     'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-30/results',
-    'FA' : [0,15,30,60],
+    'FA' : [0,30,60,120],
     'birthdate' : '',
     'hand' :'R' ,
 }
@@ -144,7 +145,7 @@ INITIALIZATION['sub03_o'] = {
                     ''],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-30/', 'ProcessedData/31P_Volunteer/2020-10-30/imgs/'],
     'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-30/results',
-    'FA' : [0,15,30,60],
+    'FA' : [0,30,60,120],
     'birthdate' : '',
     'hand' :'R' ,
 }
@@ -155,22 +156,29 @@ INITIALIZATION['calibration'] ={
   #  'phantom_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/meas_MID65_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9651_filter_hamming2_freq_0_echo_0.nii',
     'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_final-2.tif',
    'phantom_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/meas_MID65_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9651_filter_hamming2_freq_0_echo_0.nii',
-    'true_value' : 50,
+    'true_value' : 50, #mM
     'slice' : [12,14],
-    'PCr' :  {'T1': 3.370,
+    # T1 int taking out of Efficient in vivo
+    # T2 in vivo 31p magetic
+    # T2e estimate from our spectra
+    'PCr' :  {'T1': 3.39,
               'T2': 0.1320,
               'T2e': 0.011 } , #verify
-    'cATP' :  {'T1': 1.27,
-             # 'T2':  02.0261,
+
+    'cATP' :  {'T1': 1.7,
+              'T2':  0.0261,
               'T2e': 0.0065},
-    'Pi' :  {'T1': 3.19,
-            'T2e': 0.011} , # verify
-    'Pbs' : {'T1': 6.8,
+
+  #  'Pi' :  {'T1': 3.7,
+  #          'T2e': 0.011} , # verify
+
+    'Pbs' : {'T1': 5.8,
             'T2e' : 0.150}, # verify
+
     'TR' : 0.250,
-    'FA' : 20,
+    'FA' : 25,
     'TE' : 0.005,
-    'tau' : 0.08,
+    'tau' : 0.08, # time saturation in s
 
 }
 
@@ -195,6 +203,7 @@ INITIALIZATION['roi'] = {
     'cortical_down' : [
                 15,16,17,43,14, #(maybe not)
                 10,12,13,19,20,21,22,23,45,46,48],
+    'occ_pole'    : [48],         
     'cortical_in' : [
                  #(maybe not)
                 24,28,29,30,31,32,36],         

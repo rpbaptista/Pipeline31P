@@ -5,22 +5,49 @@
 import numpy as np
 from scipy.linalg import expm
 
-def mag_signal_N (N, FA, TE, TR, A, C, M0):
-    
+def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, A_without_sat):
+    """
+     Interleaved acquisition
+      Saturation B - excitation A - rest,spoil  - Saturation A - excitation B - rest,spoil
+    """
+
+    Trest = TR/2 - TSat
+
     Rz = np.zeros((3,3))    
-    Rflip = yrot(FA)
-    Rflip = np.block([[Rflip,Rz],[Rz,Rflip]])
+    
+    Rflip = xrot(FA)
+    Rflip_A = np.block([[Rflip,Rz],[Rz,Rz]])
+    Rflip_B = np.block([[Rz,Rz],[Rz,Rflip]])
+
     Moutput = np.zeros((6,N))
-
+    # A TR of 250ms
     for i in range(N):
-        Mte = magnetization_signal( TE, A, C, M0 )
-        Moutput[:,i] = Mte
-        Mte = Rflip@Mte
+        # A - part first half
+        Msat = magnetization_signal( TSat, A, C, M0 )
+        Mexc_A = Rflip_A@Msat
 
-        Mtr = magnetization_signal( TR-TE, A, C, Mte )
+        # Observation
+        Mte_A =  magnetization_signal( TE, A_without_sat, C, Mexc_A )
+        Moutput[0:3,i] = Mte_A[0:3]
+        # continuation
+        Mtr_A =  magnetization_signal( Trest, A_without_sat, C, Mexc_A )
+        Mtr_A[0] = 0 # Spoiler
+        Mtr_A[1] = 0
 
-        M0 = Mtr
+        # B - part Mte_A[0:2]
+        Msat = magnetization_signal( TSat, A, C, Mtr_A )
+        Mexc_B = Rflip_B@Msat
+       
+        # Observation
+        Mte_B =  magnetization_signal( TE, A_without_sat, C, Mexc_B )
+        Moutput[3:6,i] = Mte_B[3:6]
+        # Continuation
+        Mtr_B =  magnetization_signal( Trest, A_without_sat, C, Mexc_B )
+        Mtr_B[3] = 0  # Spoiler
+        Mtr_B[4] = 0
 
+        M0 = Mtr_B
+        
     return Moutput
 
 def magnetization_signal( t, A,C, M0 ):
@@ -34,20 +61,16 @@ def magnetization_signal( t, A,C, M0 ):
 
 def getMagMat(dfa, dfb, M0a, M0b, kab, kba, t_A, t_B, w1A, w1B):
     A = np.array(
-        ((-1/t_A['T2e']-kab,    2*np.pi*dfa,                0,              kba,                0,                     0),
-        ( -2*np.pi*(dfa),        -1/t_A['T2e']-kab,          w1A,               0,                kba,                    0),
+        ((-1/t_A['T2']-kab,    2*np.pi*dfa,                0,              kba,                0,                     0),
+        ( -2*np.pi*(dfa),        -1/t_A['T2']-kab,          w1A,               0,                kba,                    0),
         (0,                         -w1A,             -1/t_A['T1']-kab,       0,                 0,                    kba),
-        (kab,                        0,                    0,         -1/t_B['T2e']-kba,    2*np.pi*(dfb),               0,),
-        (0,                         kab,                   0,            - 2*np.pi*(dfb),    -1/t_B['T2e']-kba,           w1B),
+        (kab,                        0,                    0,         -1/t_B['T2']-kba,    2*np.pi*(dfb),               0,),
+        (0,                         kab,                   0,            - 2*np.pi*(dfb),    -1/t_B['T2']-kba,           w1B),
         (0,                          0,                   kab,                0,               -w1B,             -1/t_B['T1']-kba))
     )
 
     C = np.array((0,0,abs_vec(M0a)/t_A['T1'],0,0,abs_vec(M0b)/t_B['T1']))
     M0 = np.concatenate((M0a, M0b)) 
-    #Ra = zrot(np.degrees(2*np.pi*dfa*t))
-    #Rb = zrot(np.degrees(2*np.pi*dfb*t))
-    #Rz = np.zeros((3,3))
-    #Rflip = np.block([[Ra,Rz],[Rz,Rb]])
  
     return A, C, M0
 

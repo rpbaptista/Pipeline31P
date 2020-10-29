@@ -15,6 +15,8 @@ subs = ['sub00_y','sub01_y','sub02_y','sub03_y']
 #rois = ['cortical_up','cortical_down', 'cortical_in']
 rois = ['cortical_down']
 
+
+
 for sub in subs:
     args = argPipeline(alignAnat=0,
                     align31P=0,
@@ -30,3 +32,5 @@ for sub in subs:
             firstRun = False
             args.alignAnat = 0
             args.align31P = 0
+
+# Group analisis
