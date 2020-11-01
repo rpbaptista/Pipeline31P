@@ -5,7 +5,7 @@
 import numpy as np
 from scipy.linalg import expm
 
-def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, A_without_sat):
+def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, C_T1, A_without_sat):
     """
      Interleaved acquisition
       Saturation B - excitation A - rest,spoil  - Saturation A - excitation B - rest,spoil
@@ -13,11 +13,12 @@ def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, A_without_sat):
 
     Trest = TR/2 - TSat
 
+    Reye = np.eye(3)    
     Rz = np.zeros((3,3))    
     
     Rflip = xrot(FA)
-    Rflip_A = np.block([[Rflip,Rz],[Rz,Rz]])
-    Rflip_B = np.block([[Rz,Rz],[Rz,Rflip]])
+    Rflip_A = np.block([[Rflip,Rz],[Rz,Reye]])
+    Rflip_B = np.block([[Reye,Rz],[Rz,Rflip]])
 
     Moutput = np.zeros((6,N))
     # A TR of 250ms
@@ -27,27 +28,31 @@ def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, A_without_sat):
         Mexc_A = Rflip_A@Msat
 
         # Observation
-        Mte_A =  magnetization_signal( TE, A_without_sat, C, Mexc_A )
+        Cexc_A = getCFromM0_vec(Mexc_A,C_T1)
+        Mte_A =  magnetization_signal( TE, A_without_sat, Cexc_A, Mexc_A )
         Moutput[0:3,i] = Mte_A[0:3]
         # continuation
-        Mtr_A =  magnetization_signal( Trest, A_without_sat, C, Mexc_A )
+        Mtr_A =  magnetization_signal( Trest, A_without_sat, Cexc_A, Mexc_A )
         Mtr_A[0] = 0 # Spoiler
         Mtr_A[1] = 0
 
         # B - part Mte_A[0:2]
-        Msat = magnetization_signal( TSat, A, C, Mtr_A )
+        Ctr_A = getCFromM0_vec(Mtr_A,C_T1)
+        Msat = magnetization_signal( TSat, A, Ctr_A, Mtr_A )
         Mexc_B = Rflip_B@Msat
        
         # Observation
-        Mte_B =  magnetization_signal( TE, A_without_sat, C, Mexc_B )
+        Cexc_B = getCFromM0_vec(Mexc_B,C_T1)
+        Mte_B =  magnetization_signal( TE, A_without_sat, Cexc_B, Mexc_B )
         Moutput[3:6,i] = Mte_B[3:6]
         # Continuation
-        Mtr_B =  magnetization_signal( Trest, A_without_sat, C, Mexc_B )
+        Mtr_B =  magnetization_signal( Trest, A_without_sat, Cexc_B, Mexc_B )
         Mtr_B[3] = 0  # Spoiler
         Mtr_B[4] = 0
 
         M0 = Mtr_B
-        
+        C =  getCFromM0_vec(Mtr_B,C_T1)
+
     return Moutput
 
 def magnetization_signal( t, A,C, M0 ):
@@ -59,6 +64,17 @@ def magnetization_signal( t, A,C, M0 ):
     
     return (expm(A*t)@(M0+A_inv@C) - A_inv@C)
 
+def getCFromM0_vec(M0,T1):
+    output = np.zeros(T1.shape)
+    output[2] =T1[2]*abs_vec(M0[0:3])
+    output[5] =T1[5]*abs_vec(M0[3:6])
+    return output
+
+def getCFromM0(M0a,M0b, t_A,t_B):
+    C = np.array((0,0,abs_vec(M0a)/t_A['T1'],0,0,abs_vec(M0b)/t_B['T1']))
+    T1 = np.array((0,0,1/t_A['T1'],0,0,1/t_B['T1']))
+    return C, T1
+
 def getMagMat(dfa, dfb, M0a, M0b, kab, kba, t_A, t_B, w1A, w1B):
     A = np.array(
         ((-1/t_A['T2']-kab,    2*np.pi*dfa,                0,              kba,                0,                     0),
@@ -69,14 +85,13 @@ def getMagMat(dfa, dfb, M0a, M0b, kab, kba, t_A, t_B, w1A, w1B):
         (0,                          0,                   kab,                0,               -w1B,             -1/t_B['T1']-kba))
     )
 
-    C = np.array((0,0,abs_vec(M0a)/t_A['T1'],0,0,abs_vec(M0b)/t_B['T1']))
+    C,C_T1 = getCFromM0(M0a,M0b, t_A,t_B)
     M0 = np.concatenate((M0a, M0b)) 
  
-    return A, C, M0
-
+    return A, C, M0, C_T1
 
  
-
+# ------------------------------------- test function
 def srsignal(flip,T1,T2,TE,TR,dfreq):
     """ 	srsignal(flip,T1,T2,TE,TR,dfreq)
  
@@ -132,7 +147,7 @@ def freeprecess(T,T1,T2,df):
 
 
 def abs_vec(vec):
-    return np.sqrt(vec[0]*vec[0]+vec[1]*vec[1]+vec[2]*vec[2])
+    return np.sqrt(np.sum(np.multiply(vec, vec)))
 
 def tranverse_relaxation(t,T2):
     A = np.zeros((3,3))

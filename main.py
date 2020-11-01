@@ -57,15 +57,7 @@ def run_pipeline(sub,roi_id,args):
     print("******************************** 31P MT pipeline  - v1.0************************")
     print('--------------------------'+sub+'--'+roi_id+'---------------------------------')
 
-    is_windows = hasattr(sys, 'getwindowsversion')
-    if is_windows:
-        sub_par['subject_dir']  = sub_par['subject_dir'].replace('/neurospin/ciclops/', 'X:/')
-        sub_par['output_dir']  = sub_par['output_dir'].replace('/neurospin/ciclops/', 'X:/')
-        calib['mask_path'] = calib['mask_path'].replace('/neurospin/ciclops/', 'X:/')
-        calib['phantom_path'] = calib['phantom_path'].replace('/neurospin/ciclops/', 'X:/')
-        print("",  sub_par['subject_dir'],  sub_par['output_dir'])
-    else:
-        spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
+    sub_par,calib = portability(sub_par,calib)
     # now, that I have the final mask I need to 
     print("-Load images")
     
@@ -261,27 +253,30 @@ def run_pipeline(sub,roi_id,args):
         appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
        
         print("-- Flux")
-        rangeK = np.arange(0.0,2,0.05)
+        rangeK = np.arange(0.0,1,0.01)
         ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
         Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_normalized'])
 
         print("-- is:{0} s-1".format(Kpcr_catp))
+        appendExcel(pd.DataFrame([Kpcr_catp]), 'flux', sub_par['output_dir'], sufix=sub+'_'+roi_id)
 
         Ma, Mb = getTheoricalValues(Kpcr_catp, Kpcr_catp*ratio, [0,0,1], [0,0, 1/ratio], FA_sub, calib, 'PCr', 'cATP')
-        print(Ma, Mb)
         Ma = Ma/np.max(Ma)
         Mb = Mb/np.max(Mb)
+
         plt.plot(FA_sub, Ma, 'b:',label='PCr equation')
-        plt.plot(FA, listStatistics_PCr['mean_normalized'],'b^'   , label='PCR real')
+        plt.plot(FA, listStatistics_PCr['mean_normalized'],'b^'   , label='PCR measured')
         plt.plot(FA_sub, Mb, 'r:', label='catp equation')
-        plt.plot(FA, listStatistics_cAtp['mean_normalized'] , 'r^'   , label='catp real')
-       
+        plt.plot(FA, listStatistics_cAtp['mean_normalized'] , 'r^'   , label='catp measured')
+        plt.xlabel('Saturation Flip Angle °')
+        plt.ylabel('Normalized signal intensity ')
+        plt.title('Metabolite mean intensity in ROI '+ roi_id)
         plt.legend()
         plt.show()
     else:
         print("-Skipped quantification")
 
-    print("--Sucess--")
+    print("--Success--")
 
 
 if __name__ == '__main__':

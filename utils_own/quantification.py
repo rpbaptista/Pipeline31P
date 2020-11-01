@@ -15,11 +15,18 @@ def getKab(range_kab,ratio, Mobs_a, FA_sub, calib, nameA, nameB, Mobs_b=None):
     error = np.zeros(range_kab.shape)
     M0a = np.array([0,0,1])
     M0b = np.array([0,0,1/ratio])
+    Mobs = np.concatenate((Mobs_a, Mobs_b)) 
     for i in range(range_kab.size):
         M_a, M_b = getTheoricalValues(range_kab[i],ratio*range_kab[i], M0a, M0b, FA_sub, calib, nameA, nameB)
         M_a = M_a/np.max(M_a)
-        error[i] = getMSE(Mobs_a,M_a) + getMSE(Mobs_b,M_b)
-    idx = np.argmin(error)
+        M_b = M_b/np.max(M_b)
+        if np.isnan(np.sum(M_a)) or np.isnan(np.sum(M_b)):
+            error[i] = np.nan
+        else:
+            M = np.concatenate((M_a, M_b))
+            error[i] = getMSE(Mobs,M) 
+    idx = np.nanargmin(error)
+    print("error",error)
     return  range_kab[idx]
 
 def getTheoricalValues(kab, kba, M0a, M0b, FA_sub, calib, nameA, nameB):
@@ -27,16 +34,10 @@ def getTheoricalValues(kab, kba, M0a, M0b, FA_sub, calib, nameA, nameB):
     M_a = np.zeros(FA_sub.shape)
     M_b = np.zeros(FA_sub.shape)
     for i in range(FA_sub.size):  
-        A, C, M0 = getMagMat(0, 0, M0a, M0b, kab, kba, calib[nameA], calib[nameB], 0, w1b[i])
-        A_without_sat, C_without_sat, M0_without_sat = getMagMat(0, 0, M0a, M0b, kab, kba, calib[nameA], calib[nameB], 0, 0)
+        A, C, M0, T1 = getMagMat(0, 0, M0a, M0b, kab, kba, calib[nameA], calib[nameB], 0, w1b[i])
+        A_without_sat, C_without_sat, M0_without_sat,T1_without_sat = getMagMat(0, 0, M0a, M0b, kab, kba, calib[nameA], calib[nameB], 0, 0)
 
-        M = mag_signal_N(10, calib['FA'], calib['TE'], calib['TR'], calib['tau'] ,A, C, M0,A_without_sat)
-        """plt.plot(np.sqrt(M[0,:]**2+M[1,:]**2), label = 'Az')
-        plt.legend()
-        plt.show()
-        plt.plot(np.sqrt(M[3,:]**2+M[4,:]**2), label = 'Bz')
-        plt.legend()
-        plt.show()"""
+        M = mag_signal_N(10, calib['FA'], calib['TE'], calib['TR'], calib['tau'] ,A, C, M0, T1, A_without_sat)
         M_a[i] = np.sqrt(M[0,-1]**2+M[1,-1]**2)
         M_b[i] = np.sqrt(M[3,-1]**2+M[4,-1]**2)
     return M_a, M_b
