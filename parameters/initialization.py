@@ -155,31 +155,46 @@ INITIALIZATION['sub03_o'] = {
 INITIALIZATION['calibration'] ={
   #  'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_final.tif',
   #  'phantom_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/meas_MID65_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9651_filter_hamming2_freq_0_echo_0.nii',
-    'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_final-2.tif',
+    'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_final-3.tif',
    'phantom_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/meas_MID65_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9651_filter_hamming2_freq_0_echo_0.nii',
     'true_value' : 50, #mM
     'slice' : [12,14],
-    # T1 int taking out of Efficient in vivo
-    # T2 in vivo 31p magetic
-    # T2e estimate from our spectra
-    'PCr' :  {'T1': 3.39,
+    # T1 efficient in vivo 31P // 31P MRS of healthy humain brain
+    # T2 in vivo 31p magnetici 
+    # T2e measured by us
+#     'PCr' :  {'T1': 3.39,
+#               'T2': 0.1320,
+#               'T2e': 0.011 } , #verify
+
+#     'cATP' :  {'T1': 1.3,
+#               'T2':  0.0261,
+#               'T2e': 0.0065},
+
+#   #  'Pi' :  {'T1': 3.77,
+#   #          'T2e': 0.011} , # verify
+
+#     'Pbs' : {'T1': 5.8, # only place that differs PIin and ext
+#                 'T2e' : 0.150}, 
+    
+    'PCr' :  {'T1': 4.9,
               'T2': 0.1320,
               'T2e': 0.011 } , #verify
 
-    'cATP' :  {'T1': 1.7,
+    'cATP' :  {'T1': 1.35,
               'T2':  0.0261,
               'T2e': 0.0065},
 
-  #  'Pi' :  {'T1': 3.7,
+  #  'Pi' :  {'T1': 3.77,
   #          'T2e': 0.011} , # verify
 
-    'Pbs' : {'T1': 5.8,
-            'T2e' : 0.150}, # verify
-
+    'Pbs' : {'T1': 7.2, # only place that differs PIin and ext
+                'T2e' : 0.150}, 
     'TR' : 0.250,
-    'FA' : 25,
+    'FA' : 18.7,
+    'FA_theorical' : 25,
     'TE' : 0.005,
     'tau' : 0.08, # time saturation in s
+    'density' : 1.05,
 
 }
 
@@ -210,6 +225,9 @@ INITIALIZATION['roi'] = {
                 24,28,29,30,31,32,36],         
 }
 
+INITIALIZATION['group'] ={
+    'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer'
+} 
 #INITIALIZATION['acquisition'] = {
 #    'FA' : [0,10,30,60],
 #}

@@ -19,7 +19,7 @@ import gzip
 from nipype.interfaces.ants.segmentation import BrainExtraction
 import sys
 
-def portability(sub_par,calib):
+def portability(sub_par,calib,group):
     is_windows = hasattr(sys, 'getwindowsversion')
 
     if is_windows:
@@ -27,7 +27,8 @@ def portability(sub_par,calib):
         sub_par['output_dir']  = sub_par['output_dir'].replace('/neurospin/ciclops/', 'X:/')
         calib['mask_path'] = calib['mask_path'].replace('/neurospin/ciclops/', 'X:/')
         calib['phantom_path'] = calib['phantom_path'].replace('/neurospin/ciclops/', 'X:/')
-        print("",  sub_par['subject_dir'],  sub_par['output_dir'])
+        calib['output_dir'] = calib['output_dir'].replace('/neurospin/ciclops/', 'X:/')
+      #  print("",  sub_par['subject_dir'],  sub_par['output_dir'])
     else:
         spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
     return sub_par, calib

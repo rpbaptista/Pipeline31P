@@ -53,11 +53,12 @@ def run_pipeline(sub,roi_id,args):
     sub_par = INITIALIZATION[sub]
     calib = INITIALIZATION['calibration']
     roi = INITIALIZATION['roi'][roi_id]
-      
+    group = INITIALIZATION['group']
+
     print("******************************** 31P MT pipeline  - v1.0************************")
     print('--------------------------'+sub+'--'+roi_id+'---------------------------------')
 
-    sub_par,calib = portability(sub_par,calib)
+    sub_par,calib = portability(sub_par,calib, group)
     # now, that I have the final mask I need to 
     print("-Load images")
     
@@ -221,7 +222,6 @@ def run_pipeline(sub,roi_id,args):
         print("-Quantification")
 
         print("-- Computing model")
-
         # Open images
         phantom = np.squeeze(openArrayImages([calib['phantom_path']]))
         mask = np.squeeze(openArrayImages([calib['mask_path']]))
@@ -247,18 +247,25 @@ def run_pipeline(sub,roi_id,args):
         # Apply model
         print("-- Applying model")
         FA_sub = np.asarray(sub_par['FA'])
+        FA_sub[1:len(sub_par['FA'])] = FA_sub[1:len(sub_par['FA'])]*calib['FA']/calib['FA_theorical'] # - 10
+        print(FA_sub)
         concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
         concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
         print(concentrations)
         appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
        
-        print("-- Flux")
+        print("-- Kinectic constant")
         rangeK = np.arange(0.0,1,0.01)
         ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
         Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_normalized'])
 
-        print("-- is:{0} s-1".format(Kpcr_catp))
-        appendExcel(pd.DataFrame([Kpcr_catp]), 'flux', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+        print("-- is:{0} s-1 , reverse {1}".format(Kpcr_catp,ratio*Kpcr_catp))
+        appendExcel(pd.DataFrame([Kpcr_catp]), 'kinetic', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+      #  appendExcel(pd.DataFrame(calib), 'calib', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+
+        print("-- Flux")
+        flux = 60*calib['density']*Kpcr_catp*concentrations['PCr concentration [mM]'][0] 
+        appendExcel(pd.DataFrame([flux]), 'flux_ck', sub_par['output_dir'], sufix=sub+'_'+roi_id)
 
         Ma, Mb = getTheoricalValues(Kpcr_catp, Kpcr_catp*ratio, [0,0,1], [0,0, 1/ratio], FA_sub, calib, 'PCr', 'cATP')
         Ma = Ma/np.max(Ma)
@@ -272,7 +279,7 @@ def run_pipeline(sub,roi_id,args):
         plt.ylabel('Normalized signal intensity ')
         plt.title('Metabolite mean intensity in ROI '+ roi_id)
         plt.legend()
-        plt.show()
+        #plt.show()
     else:
         print("-Skipped quantification")
 

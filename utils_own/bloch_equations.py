@@ -21,7 +21,7 @@ def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, C_T1, A_without_sat):
     Rflip_B = np.block([[Reye,Rz],[Rz,Rflip]])
 
     Moutput = np.zeros((6,N))
-    # A TR of 250ms
+    
     for i in range(N):
         # A - part first half
         Msat = magnetization_signal( TSat, A, C, M0 )

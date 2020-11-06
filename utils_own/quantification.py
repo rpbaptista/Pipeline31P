@@ -26,7 +26,6 @@ def getKab(range_kab,ratio, Mobs_a, FA_sub, calib, nameA, nameB, Mobs_b=None):
             M = np.concatenate((M_a, M_b))
             error[i] = getMSE(Mobs,M) 
     idx = np.nanargmin(error)
-    print("error",error)
     return  range_kab[idx]
 
 def getTheoricalValues(kab, kba, M0a, M0b, FA_sub, calib, nameA, nameB):
