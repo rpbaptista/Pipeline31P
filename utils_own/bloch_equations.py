@@ -31,6 +31,8 @@ def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, C_T1, A_without_sat):
         Cexc_A = getCFromM0_vec(Mexc_A,C_T1)
         Mte_A =  magnetization_signal( TE, A_without_sat, Cexc_A, Mexc_A )
         Moutput[0:3,i] = Mte_A[0:3]
+       # Moutput[0:3,i] = Mexc_A[0:3]
+        
         # continuation
         Mtr_A =  magnetization_signal( Trest, A_without_sat, Cexc_A, Mexc_A )
         Mtr_A[0] = 0 # Spoiler
@@ -45,6 +47,8 @@ def mag_signal_N (N, FA, TE, TR, TSat, A, C, M0, C_T1, A_without_sat):
         Cexc_B = getCFromM0_vec(Mexc_B,C_T1)
         Mte_B =  magnetization_signal( TE, A_without_sat, Cexc_B, Mexc_B )
         Moutput[3:6,i] = Mte_B[3:6]
+       # Moutput[3:6,i] = Mexc_B[3:6]
+
         # Continuation
         Mtr_B =  magnetization_signal( Trest, A_without_sat, Cexc_B, Mexc_B )
         Mtr_B[3] = 0  # Spoiler
@@ -70,22 +74,30 @@ def getCFromM0_vec(M0,T1):
     output[5] =T1[5]*abs_vec(M0[3:6])
     return output
 
-def getCFromM0(M0a,M0b, t_A,t_B):
-    C = np.array((0,0,abs_vec(M0a)/t_A['T1'],0,0,abs_vec(M0b)/t_B['T1']))
-    T1 = np.array((0,0,1/t_A['T1'],0,0,1/t_B['T1']))
+def getT1int(times, k):
+    if 'T1_int' in times:
+      #  print ("T1app",times['T1_int'])
+        return times['T1_int'] 
+    num = 1
+    den = 1/times['T1']  - k
+   # print("T1app",times['T1'] ,num/den, k )
+    return num/den
+def getCFromM0(M0a,M0b, t_A,t_B, kab, kba):
+    C = np.array((0,0,abs_vec(M0a)/getT1int(t_A, kab),0,0,abs_vec(M0b)/getT1int(t_B, kba)))
+    T1 = np.array((0,0,1/getT1int(t_A, kab),0,0,1/getT1int(t_B, kba)))
     return C, T1
 
 def getMagMat(dfa, dfb, M0a, M0b, kab, kba, t_A, t_B, w1A, w1B):
     A = np.array(
         ((-1/t_A['T2']-kab,    2*np.pi*dfa,                0,              kba,                0,                     0),
         ( -2*np.pi*(dfa),        -1/t_A['T2']-kab,          w1A,               0,                kba,                    0),
-        (0,                         -w1A,             -1/t_A['T1']-kab,       0,                 0,                    kba),
+        (0,                         -w1A,  -1/getT1int(t_A,kab)-kab,       0,                 0,                    kba),
         (kab,                        0,                    0,         -1/t_B['T2']-kba,    2*np.pi*(dfb),               0,),
         (0,                         kab,                   0,            - 2*np.pi*(dfb),    -1/t_B['T2']-kba,           w1B),
-        (0,                          0,                   kab,                0,               -w1B,             -1/t_B['T1']-kba))
+        (0,                          0,                   kab,                0,               -w1B,             -1/getT1int(t_B,kba)-kba))
     )
 
-    C,C_T1 = getCFromM0(M0a,M0b, t_A,t_B)
+    C,C_T1 = getCFromM0(M0a,M0b, t_A,t_B, kab, kba)
     M0 = np.concatenate((M0a, M0b)) 
  
     return A, C, M0, C_T1

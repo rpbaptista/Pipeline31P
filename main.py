@@ -29,15 +29,15 @@ sys.path.append(os.path.join(sys.path[0],'./parameters/'))
     
 # Import homemade
 #from metrics import statisticsImage
-from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel, readExcel, appendExcel
-from metrics import ListStatistics
+from utils import openArrayImages,createPath, openArrayImages, plotStatMT, createPathArray, createPathArray, saveArrayNifti, saveExcel, readExcel, appendExcel, updateNoise
+from metrics import ListStatistics, scale
 
 #from utilsEval import generateSaveGraphIntensityFA, computeStatistics
 from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
 from metrics import statisticsImage
 from utils_own.argsPipeline import argPipeline
-from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask, getKf,getKab,getTheoricalValues
+from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask, getKf, getKab, getTheoricalValues
 from utils_own.model import getW1fromFAandTau
 from utils_own.bloch_equations import getMagMat, mag_signal_N
 
@@ -195,15 +195,15 @@ def run_pipeline(sub,roi_id,args):
          
         vols_cATP = openArrayImages(r_final_realign_path_cATP)
         vols_PCr = openArrayImages(r_final_realign_path_PCr)
-        mask_volunteer = openArrayImages(mask_volunteer)
+        mask_volunteer_vols = openArrayImages(mask_volunteer)
         FA = sub_par['FA']
         FA = np.asarray(FA)
 
         stats_pcr =  []
         stats_catp =  []
         for i in range(img_cATP.shape[0]):
-            stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer))
-            stats_catp.append(statisticsImage(vols_cATP[i,:,:,:], mask_volunteer))
+            stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer_vols))
+            stats_catp.append(statisticsImage(vols_cATP[i,:,:,:], mask_volunteer_vols))
         
         listStatistics_cAtp = ListStatistics(stats_catp)
         listStatistics_PCr = ListStatistics(stats_pcr)
@@ -228,9 +228,12 @@ def run_pipeline(sub,roi_id,args):
 
         # slice
         phantom = phantom[:,:,calib['slice'][0]:calib['slice'][1]].T
-       
+        noise  = np.squeeze(openArrayImages([calib['noise_acq']]))
+        noise_mean = np.mean(noise)# - np.min(noise)
+        
         #Compute model
         signal_m = meanMask(phantom, mask)
+        signal_m = signal_m - noise_mean
         alpha_cATP = getCoefficient_T1_T2(signal = signal_m, 
                                 calib = calib,
                                 in_met = 'Pbs',
@@ -241,27 +244,33 @@ def run_pipeline(sub,roi_id,args):
                                 out_met= 'PCr')
         
         # read data
+       
         listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'PCr')
         listStatistics_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'cATP')
-    
+
+        listStatistics_PCr = updateNoise(listStatistics_PCr, noise_mean)
+        listStatistics_cAtp = updateNoise(listStatistics_cAtp, noise_mean)
+
         # Apply model
         print("-- Applying model")
         FA_sub = np.asarray(sub_par['FA'])
         FA_sub[1:len(sub_par['FA'])] = FA_sub[1:len(sub_par['FA'])]*calib['FA']/calib['FA_theorical'] # - 10
         print(FA_sub)
-        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
+      #  concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
+        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), (listStatistics_cAtp['mean_metabolite']-noise_mean)/alpha_cATP, 
+                                                                 (listStatistics_PCr['mean_metabolite']-noise_mean)/alpha_PCr], axis=1)
         concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
         print(concentrations)
         appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
        
-        print("-- Kinectic constant")
-        rangeK = np.arange(0.0,1,0.01)
+        print("-- Kinetic constant")
+        rangeK = np.arange(0.1,0.5,0.01)
         ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
-        Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_normalized'])
+        Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_norm_wo_n'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_norm_wo_n'])
+      #  Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_normalized'])
 
         print("-- is:{0} s-1 , reverse {1}".format(Kpcr_catp,ratio*Kpcr_catp))
         appendExcel(pd.DataFrame([Kpcr_catp]), 'kinetic', sub_par['output_dir'], sufix=sub+'_'+roi_id)
-      #  appendExcel(pd.DataFrame(calib), 'calib', sub_par['output_dir'], sufix=sub+'_'+roi_id)
 
         print("-- Flux")
         flux = 60*calib['density']*Kpcr_catp*concentrations['PCr concentration [mM]'][0] 
@@ -270,16 +279,17 @@ def run_pipeline(sub,roi_id,args):
         Ma, Mb = getTheoricalValues(Kpcr_catp, Kpcr_catp*ratio, [0,0,1], [0,0, 1/ratio], FA_sub, calib, 'PCr', 'cATP')
         Ma = Ma/np.max(Ma)
         Mb = Mb/np.max(Mb)
+        print(Mb)
 
         plt.plot(FA_sub, Ma, 'b:',label='PCr equation')
-        plt.plot(FA, listStatistics_PCr['mean_normalized'],'b^'   , label='PCR measured')
+        plt.plot(FA_sub, listStatistics_PCr['mean_norm_wo_n'],'b^'   , label='PCR measured')
         plt.plot(FA_sub, Mb, 'r:', label='catp equation')
-        plt.plot(FA, listStatistics_cAtp['mean_normalized'] , 'r^'   , label='catp measured')
+        plt.plot(FA_sub, listStatistics_cAtp['mean_norm_wo_n'] , 'r^'   , label='catp measured')
         plt.xlabel('Saturation Flip Angle °')
         plt.ylabel('Normalized signal intensity ')
         plt.title('Metabolite mean intensity in ROI '+ roi_id)
         plt.legend()
-        #plt.show()
+        plt.show()
     else:
         print("-Skipped quantification")
 

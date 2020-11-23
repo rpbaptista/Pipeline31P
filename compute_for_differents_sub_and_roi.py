@@ -12,9 +12,9 @@ from group_analysis import run_group
 
 subs = ['sub01_y','sub02_y','sub03_y']#
 #subs = ['sub01_o']
-#subs = [ 'sub00_y']
+#subs = [ 'sub00_y']#
 rois = ['cortical_up','cortical_down', 'cortical_in']#
-#rois = ['cortical_down']
+#rois = ['occ_pole']
 only_group = False
 
 if only_group == False:
@@ -24,7 +24,7 @@ if only_group == False:
                         createROI=0,
                         computeStatistics=1,
                         quantification=1, 
-                        BET = True)
+                        BET = True) 
         firstRun = True
 
         for roi in rois:
