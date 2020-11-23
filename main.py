@@ -233,7 +233,8 @@ def run_pipeline(sub,roi_id,args):
         
         #Compute model
         signal_m = meanMask(phantom, mask)
-        signal_m = signal_m - noise_mean
+        print(signal_m, noise_mean)
+      #  signal_m = signal_m - noise_mean
         alpha_cATP = getCoefficient_T1_T2(signal = signal_m, 
                                 calib = calib,
                                 in_met = 'Pbs',
@@ -256,9 +257,9 @@ def run_pipeline(sub,roi_id,args):
         FA_sub = np.asarray(sub_par['FA'])
         FA_sub[1:len(sub_par['FA'])] = FA_sub[1:len(sub_par['FA'])]*calib['FA']/calib['FA_theorical'] # - 10
         print(FA_sub)
-      #  concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
-        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), (listStatistics_cAtp['mean_metabolite']-noise_mean)/alpha_cATP, 
-                                                                 (listStatistics_PCr['mean_metabolite']-noise_mean)/alpha_PCr], axis=1)
+        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
+   #     concentrations = pd.concat([pd.DataFrame(sub_par['FA']), (listStatistics_cAtp['mean_metabolite']-noise_mean)/alpha_cATP, 
+   #                                                              (listStatistics_PCr['mean_metabolite']-noise_mean)/alpha_PCr], axis=1)
         concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
         print(concentrations)
         appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
@@ -289,7 +290,7 @@ def run_pipeline(sub,roi_id,args):
         plt.ylabel('Normalized signal intensity ')
         plt.title('Metabolite mean intensity in ROI '+ roi_id)
         plt.legend()
-        plt.show()
+     #   plt.show()
     else:
         print("-Skipped quantification")
 

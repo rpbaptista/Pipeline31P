@@ -55,18 +55,19 @@ INITIALIZATION['sub02_y'] = {
     'anat_1H' : 'at140305_20191203_001_004_ns_mprage_pTx_V2.nii', # Vincent Gras
     'anat_31P' : 'at140305_20201009_001_002_t1_mpr_tra_iso2_0mm.nii',
     '31P_PCr' :  ['meas_MID232_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9360_filter_hamming2_freq_0_echo_0.nii',
-                    'meas_MID233_31P_MT_cATP_FA10_PCr_TPI_P3600_RES12_TR250_TE5_FID9361_filter_hamming2_freq_0_echo_0.nii',
+  #                  'meas_MID233_31P_MT_cATP_FA10_PCr_TPI_P3600_RES12_TR250_TE5_FID9361_filter_hamming2_freq_0_echo_0.nii',
                     'meas_MID236_31P_MT_cATP_FA15_PCr_TPI_P3600_RES12_TR250_TE5_FID9364_filter_hamming2_freq_0_echo_0.nii',
                     'meas_MID234_31P_MT_cATP_FA30_PCr_TPI_P3600_RES12_TR250_TE5_FID9362_filter_hamming2_freq_0_echo_0.nii',
                      'meas_MID235_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID9363_filter_hamming2_freq_0_echo_0.nii'],
     '31P_cATP' : ['meas_MID232_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9360_filter_hamming2_freq_-300_echo_0.nii',
-                    'meas_MID233_31P_MT_cATP_FA10_PCr_TPI_P3600_RES12_TR250_TE5_FID9361_filter_hamming2_freq_-300_echo_0.nii',
+  #                  'meas_MID233_31P_MT_cATP_FA10_PCr_TPI_P3600_RES12_TR250_TE5_FID9361_filter_hamming2_freq_-300_echo_0.nii',
                     'meas_MID236_31P_MT_cATP_FA15_PCr_TPI_P3600_RES12_TR250_TE5_FID9364_filter_hamming2_freq_-300_echo_0.nii',
                     'meas_MID234_31P_MT_cATP_FA30_PCr_TPI_P3600_RES12_TR250_TE5_FID9362_filter_hamming2_freq_-300_echo_0.nii',
                      'meas_MID235_31P_MT_cATP_FA60_PCr_TPI_P3600_RES12_TR250_TE5_FID9363_filter_hamming2_freq_-300_echo_0.nii'],
     'replaceFolder' : ['ReconstructedData/31P_Volunteer/2020-10-09/', 'ProcessedData/31P_Volunteer/2020-10-09/imgs/'],
     'output_dir' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/2020-10-09/results',
-    'FA' : [0,20,30,60,120],
+  #  'FA' : [0,20,30,60,120],
+    'FA' : [0,30,60,120],
     'birthdate' : '1992-08-12',
     'hand' : 'R',
 }
@@ -153,15 +154,15 @@ INITIALIZATION['sub03_o'] = {
 
 
 INITIALIZATION['calibration'] ={
+ #   'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/Mask_new_shim_2.tif',
     'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/Mask-new_shim.tif',
    'phantom_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/meas_MID65_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9651_filter_hamming2_freq_0_echo_0.nii',
     'noise_acq' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/voltage-zero-pcr.nii', 
     'true_value' : 50, #mM
-    'slice' : [10,12],
-    # T1 efficient in vivo 31P
-    # T2 in vivo 31p magnetici (T1 aqui é apparent)
+    'slice' : [12,14],
+    # T1,  T2 in vivo 31p magnetici (T1 aqui é apparent)
     # T2e measured by us
-    'PCr' :  {'T1': 4.9,
+    'PCr' :  {'T1': 3.37,
               'T2': 0.1320,
               'T2e': 0.011 } , #verify
 
@@ -169,7 +170,7 @@ INITIALIZATION['calibration'] ={
               'T2':  0.0261,
               'T2e': 0.0065},
 
-  #  'Pi' :  {'T1': 3.7,
+  #  'Pi' :  {'T1': 3.2,
   #          'T2e': 0.011} , # verify
 
     'Pbs' : {'T1': 6.7, # here is another reference that evaluate free T1 31P MRS healthy
