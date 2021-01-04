@@ -18,6 +18,8 @@ import shutil
 import gzip
 from nipype.interfaces.ants.segmentation import BrainExtraction
 import sys
+import numbers
+
 
 def portability(sub_par,calib,group):
     is_windows = hasattr(sys, 'getwindowsversion')
@@ -264,7 +266,10 @@ def aggregate_mask(INITIALIZATION_ROI,  atlas, output_filename):
     img = nb.load(atlas)
     hdr = img.header
     data = img.get_fdata()
-    new_mask = np.in1d( data, INITIALIZATION_ROI ).reshape( data.shape )
+    if isinstance(INITIALIZATION_ROI, numbers.Number):
+        new_mask = data > INITIALIZATION_ROI
+    else:
+        new_mask = np.in1d( data, INITIALIZATION_ROI ).reshape( data.shape )
     nifti = nb.Nifti1Image(new_mask.astype(int),None, header=hdr)
     nb.save(nifti, output_filename)
     return nifti

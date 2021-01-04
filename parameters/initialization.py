@@ -190,6 +190,9 @@ INITIALIZATION['atlas'] ={
     'path_cor' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/HarvardOxford-cort-maxprob-thr25-2mm.nii',
     'labels_cor-xml' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/HarvardOxford-cort-maxprob-thr25-2mm.xml',
     'labels_sub-xml' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/HarvardOxford-sub-maxprob-thr25-2mm.xml',
+  #  'path_white' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/avg152T1_white.nii',
+  #  'path_gray' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/avg152T1_gray-1.nii'
+    
 }
 
 INITIALIZATION['template'] = {
@@ -206,10 +209,12 @@ INITIALIZATION['roi'] = {
     'cortical_down' : [
                 15,16,17,43,14, #(maybe not)
                 10,12,13,19,20,21,22,23,45,46,48],
-    'occ_pole'    : [48],         
+    'cortical_occ_pole'    : [48],         
     'cortical_in' : [
                  #(maybe not)
-                24,28,29,30,31,32,36],         
+                24,28,29,30,31,32,36],
+    'wm' :  '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_wm.nii',
+    'gm' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_gm.nii'        
 }
 
 INITIALIZATION['group'] ={

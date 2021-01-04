@@ -13,7 +13,8 @@ from group_analysis import run_group
 subs = ['sub01_y','sub02_y','sub03_y']#
 #subs = ['sub01_o']
 #subs = [ 'sub00_y']#
-rois = ['cortical_up','cortical_down', 'cortical_in']#
+rois = ['cortical_up','cortical_down', 'cortical_in']
+#rois = ['wm', 'gm'] 
 #rois = ['occ_pole']
 only_group = False
 
@@ -21,7 +22,7 @@ if only_group == False:
     for sub in subs:
         args = argPipeline(alignAnat=0,
                         align31P=0,
-                        createROI=0,
+                        createROI=1,
                         computeStatistics=1,
                         quantification=1, 
                         BET = True) 

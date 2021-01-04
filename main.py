@@ -175,13 +175,20 @@ def run_pipeline(sub,roi_id,args):
     if (args.createROI == 1):
         print("-Create individual ROI")
         print("--Create ROI in MNI")
-        mask = aggregate_mask(roi,  INITIALIZATION['atlas']['path_cor'], mask_mni)
-        labels = get_labels(INITIALIZATION['atlas'],'labels_cor-xml')
-        print("-- This ROI contains")
-        roi_label = roi.copy()
-        roi_label[:] = [number - 1 for number in roi]
+        if 'cortical' in roi_id:
+            mask = aggregate_mask(roi,  INITIALIZATION['atlas']['path_cor'], mask_mni)
+            labels = get_labels(INITIALIZATION['atlas'],'labels_cor-xml')
+        else:
+            mask = aggregate_mask(0.5,  roi, mask_mni)
 
-        print(labels.loc[roi_label]['#text'])
+        print("-- This ROI contains")
+        if 'cortical' in roi_id:
+
+            roi_label = roi.copy()
+            roi_label[:] = [number - 1 for number in roi]
+            print(labels.loc[roi_label]['#text'])
+        else:
+            print(roi)
         print("--Apply individual inverse transformation to MNI")
         apply_warp(mask_mni, INITIALIZATION['template']['mni_brain'], warp_file.replace('.nii', '_inverse.nii'), out_file=mask_volunteer, forceNii=True)
         apply_warp(resliced_1H_MNI_brain, INITIALIZATION['template']['mni_brain'], warp_file, prefix='warp')
