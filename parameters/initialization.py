@@ -10,6 +10,9 @@ import numpy as np
 
 INITIALIZATION = dict()
 
+
+
+
 INITIALIZATION['sub00_y'] = {
     'subject_dir' :  '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2020-08-28/' ,
     'anat_1H' : 'fl200200_20200819_001_012_mprage_sag_T1_160sl_iPAT2.nii', # Florent M.
