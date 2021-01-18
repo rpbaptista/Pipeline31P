@@ -23,7 +23,7 @@ INITIALIZATION['b1_database'] = {
 }
 
 def get_sequence_alpha(alpha):
-    return np.array([alpha, 2*alpha, 3*alpha]).flatten()
+    return np.array([alpha, 2*alpha]).flatten()
 
 def function_B1_double(x_values, alpha, S0):
     T1 = x_values[0]

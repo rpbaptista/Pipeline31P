@@ -30,12 +30,13 @@ N_iterations = 1000
 # True values
 # Noise
 
-alpha_0 = np.linspace(10, 45, num=15) # np.array([25,35,45] )
+alpha_0 = np.linspace(5, 30, num=15) # np.array([25,35,45] )
 results_monte_carlo = np.zeros((alpha_0.size,N_iterations))
 for j in range(alpha_0.size):
     S_alpha = equation_B1(init['T1'] ,init['TR'],get_sequence_alpha(alpha_0[j] ) , S0)
+    print(S_alpha)
     std = 0.1*S_alpha[0]  
-    mean = 0
+    mean = 1*S_alpha[0]  
     noise =  std * np.random.randn(S_alpha.size,N_iterations) + mean
 
     for i in range(N_iterations):
