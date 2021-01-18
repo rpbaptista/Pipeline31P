@@ -38,6 +38,7 @@ def equation_Mt_simp(M0, deltaT, N, T1, TR, Kf):
 
 
 def signal_equation(TR, M0, alpha_deg, T1):
+ #   print("TR: {0}, MO: {1}, alpha_deg: {2}, T1: {3}".format(TR, M0,alpha_deg,T1))
     alpha_rad = np.radians(alpha_deg)
     num = M0*np.sin(alpha_rad)*(1-np.exp(-TR/T1))
     den = 1 - np.exp(-TR/T1)*np.cos(alpha_rad)

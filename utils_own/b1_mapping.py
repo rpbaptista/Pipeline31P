@@ -22,23 +22,44 @@ INITIALIZATION['b1_database'] = {
     'TR' : 0.250,
 }
 
-def function_alpha(x_values, S0, alpha):
+def get_sequence_alpha(alpha):
+    return np.array([alpha, 2*alpha, 3*alpha]).flatten()
+
+def function_B1_double(x_values, alpha, S0):
     T1 = x_values[0]
     TR = x_values[1]
-
-    ans = equation_B1(T1, TR, alpha, alpha*2, S0)
+    alphas = get_sequence_alpha(alpha)
+    ans = equation_B1(T1, TR, alphas, S0)
+#    S0 = /ans*ans
     return ans
-def equation_B1(T1, TR, alpha_1, alpha_2, S0=1):
+
+
+def function_B1(x_values, S0, alpha):
+    T1 = x_values[0]
+    TR = x_values[1]
+    ans = equation_B1(T1, TR, alpha,  S0)
+    
+    return ans
+
+def equation_B1(T1, TR, alpha_1, S0=1):
     """
     DAM method no relaxed T1
     alpha_1 deg
     alpha_2 deg
     """
-    S1 = signal_equation(TR, S0, alpha_1, T1)
-    S2 = signal_equation(TR, S0, alpha_2, T1)
+    S1 = signal_equation(TR, S0, alpha_1, T1)    
+    return S1
+
+# def ratio_equation_b1(T1, TR, alpha_1, alpha_2, S0=1):
+#     """
+#     DAM method no relaxed T1
+#     alpha_1 deg
+#     alpha_2 deg
+#     """
+#     S1 = signal_equation(TR, S0, alpha_1, T1)
+#     S2 = signal_equation(TR, S0, alpha_2, T1)
     
     return S1/S2
-
 def search_keys_sub(dict_b1_database):
     result = []
 
