@@ -21,6 +21,7 @@ from skimage.restoration import denoise_nl_means, estimate_sigma
 from utils_own.b1_mapping import *
 from parameters.initialization_b1map import *
 from utils import openArrayImages
+spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
 data = INITIALIZATION_B1['b1_database'] 
 init = INITIALIZATION_B1
@@ -57,7 +58,6 @@ for sub in keys_sub:
     patch_size = 5
     patch_distance = 6
     sigma_est = np.mean(estimate_sigma(SFdata[0,:,:,0], multichannel=False))
-    print(sigma_est)
     patch_kw = dict(patch_size=patch_size,      # 5x5 patches
                 patch_distance=patch_distance)
    

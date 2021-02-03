@@ -34,7 +34,7 @@ def imageToMNI(template,anat,image, output_dir):
     print("--Reslice anat 1H into MNI")
     reslice(template, realign_anat)
     aux = add_prefix(realign_anat, 'r')
-    fsl_anat(aux, resliced_1H_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template)
+    fsl_anat(aux, resliced_1H_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template, brain=False)
     return 0
 
 

@@ -51,7 +51,7 @@ INITIALIZATION_B1['template'] = {
     } 
 
 INITIALIZATION_B1['output_dir'] ={
-    'sub-01' : '/neurospin/ciclops/people/Renata/ProcessedData/31P_Volunteer/CarteB1/2021-01-29/',
-    'sub-02' : '/neurospin/ciclops/people/Renata/RrocessedData/31P_Volunteer/CarteB1/2021-02-03/',
+    'sub-01' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/2021-01-29/',
+    'sub-02' : '/neurospin/ciclops/people/Renata/RrocessedData/B1Map/2021-02-03/',
 
 }  
