@@ -84,11 +84,11 @@ for sub in keys_sub:
         # Saving B1 map 
         array = results.reshape((shape[1], shape[2], shape[3]))
         img = nib.Nifti1Image(np.squeeze(array), np.eye(4))
-        nib.save(img, filename_output)
+        nib.save(img, os.path.join(init['output_dir'][sub],filename_output))
         # Saving B1 error map
         error_ = err.reshape((shape[1], shape[2], shape[3]))
         img = nib.Nifti1Image(np.squeeze(error_), np.eye(4))
-        nib.save(img, error_output)
+        nib.save(img,  os.path.join(init['output_dir'][sub],error_output))
 
         # alpha_estim = array[idx_courone[0] , idx_courone[1], idx_courone[2]  ] 
         # s_obs =   SFdata[:,idx_courone[0],idx_courone[1],idx_courone[2] ] 

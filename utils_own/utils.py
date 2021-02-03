@@ -130,7 +130,7 @@ def fsl_mask(image, mask, outfile):
 def fsl_anat(anat, T1_MNI_aligned_to_mni,brain_MNI_aligned_to_mni, path_field, inv_field, ref, brain=True):
     currentDirectory = os.getcwd()
 
-    split = os.path.split(brain_MNI_aligned_to_mni)
+    split = os.path.split(T1_MNI_aligned_to_mni)
     os.chdir(split[0])
 
     cmd = "fsl_anat -i " + anat+" --noseg --nocrop --nocleanup --nosubcortseg --nosearch --noreorient --clobber -o " + os.path.join(split[0], "aux")
@@ -143,7 +143,7 @@ def fsl_anat(anat, T1_MNI_aligned_to_mni,brain_MNI_aligned_to_mni, path_field, i
             shutil.copyfileobj(f_in, f_out)
     shutil.copy(os.path.join(split[0], "aux.anat","T1_biascorr.nii"), T1_MNI_aligned_to_mni)
     
-    if brain == False:
+    if brain == True:
         with gzip.open(os.path.join(split[0], "aux.anat","T1_biascorr_brain.nii.gz"), 'rb') as f_in:
             with open(os.path.join(split[0], "aux.anat","T1_biascorr_brain.nii"), 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
