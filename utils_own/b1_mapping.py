@@ -11,34 +11,7 @@ import sys, os
 sys.path.append(os.path.join(sys.path[0],'./utils_own/'))
 
 from utils_own.model import * 
-
-INITIALIZATION = dict()
-
-INITIALIZATION['b1_database_phantom'] = {
-    #   'sub-00' : ['/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID112_31P_MT_cATP_FA0_PCr_VA12_FID16768_filter_hamming2_freq_0_echo_0.nii',
- #               '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID110_31P_MT_cATP_FA0_PCr_VA24_FID16766_filter_hamming2_freq_0_echo_0.nii',
- #           '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID103_31P_MT_cATP_FA0_PCr_VA36_FID16759_filter_hamming2_freq_0_echo_0.nii',
- #           '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID108_31P_MT_cATP_FA0_PCr_VA48_FID16764_filter_hamming2_freq_0_echo_0.nii'], 
-
-'sub-01' : [
-    '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-29/meas_MID634_31P_MT_cATP_FA0_PCr_VA24_FID17904_filter_hamming2_freq_0_echo_0.nii',
-   '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-29/meas_MID633_31P_MT_cATP_FA0_PCr_VA48_FID17903_filter_hamming2_freq_0_echo_0.nii'], 
-
-    'FA_nominal' : [12,24,36,48],
-    'T1' : 6.7,
-    'TR' : 0.250
-    }
-INITIALIZATION['b1_database'] = {
- 'sub-01' : [
-    '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2021-01-27/meas_MID468_31P_MT_cATP_FA0_PCr_VA12_FID17680_filter_hamming2_freq_0_echo_0.nii',
-   '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2021-01-27/meas_MID467_31P_MT_cATP_FA0_PCr_VA24_FID17679_filter_hamming2_freq_0_echo_0.nii',
-'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2021-01-27/meas_MID466_31P_MT_cATP_FA0_PCr_VA36_FID17678_filter_hamming2_freq_0_echo_0.nii',
-    '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/2021-01-27/meas_MID465_31P_MT_cATP_FA0_PCr_VA48_FID17677_filter_hamming2_freq_0_echo_0.nii'],
-
-    'FA_nominal' : [12,24,36,48],
-    'T1' : 3.37,
-    'TR' : 0.250,
-}
+from utils_own.utils import * 
 """
 def yFromSFdata(SFdata):
     y_values_alpha_1 = SFdata[0,:,:,:].reshape((-1,1))
@@ -48,6 +21,44 @@ def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha]).flatten()
 """
 
+def imageToMNI(template,anat,image, output_dir):
+    print("--Realigned anat to TEMPLATE")
+    calc_coreg_imgs(template, [anat], os.path.join(output_dir,'anat_register_mni.mat'))
+    
+    realign_anat = add_prefix(anat, 'r')
+    resliced_1H_MNI = add_prefix(realign_anat, 'fsl_r')
+    warp_file = resliced_1H_MNI.replace('.nii', '_warpcoef.nii')
+
+    apply_transf_imgs([anat], os.path.join(output_dir,'inverse_anat_register_mni.mat') , [realign_anat])
+    
+    print("--Reslice anat 1H into MNI")
+    reslice(template, realign_anat)
+    aux = add_prefix(realign_anat, 'r')
+    fsl_anat(aux, resliced_1H_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template)
+    return 0
+
+
+def B1mapFromYvalues(y_values,init):
+    results = np.zeros(y_values[:,0].shape)
+    err = np.zeros(y_values[:,0].shape)
+
+    for i in range(len(y_values[:,0])):
+        x_values =[ init['T1'] ,init['TR']]
+        for k in range(len(y_values[i,:])):
+            x_values.append(y_values[i,k] )
+        try:
+            pop, pcov = curve_fit(function_B1_double,
+                                    x_values,
+                                    y_values[i,:] ,absolute_sigma=True )
+        #    print("parameters, pcov", pop, pcov)
+        except RuntimeError:
+            results[i] = -1  
+            err[i] = -1 
+            pass
+     #   print(y_values[i,:],results[i])
+        results[i]= pop #
+        err[i]  = np.sqrt(np.diag(pcov))
+    return results, err
 def yFromSFdata(SFdata):
     y_values_alpha_1 = SFdata[0,:,:,:].reshape((-1,1))
     y_values_alpha_2 = SFdata[1,:,:,:].reshape((-1,1))
