@@ -3,11 +3,18 @@
 INITIALIZATION_B1 = dict()
 
 INITIALIZATION_B1['b1_database_phantom'] = {
-    #   'sub-00' : ['/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID112_31P_MT_cATP_FA0_PCr_VA12_FID16768_filter_hamming2_freq_0_echo_0.nii',
- #               '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID110_31P_MT_cATP_FA0_PCr_VA24_FID16766_filter_hamming2_freq_0_echo_0.nii',
- #           '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID103_31P_MT_cATP_FA0_PCr_VA36_FID16759_filter_hamming2_freq_0_echo_0.nii',
- #           '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID108_31P_MT_cATP_FA0_PCr_VA48_FID16764_filter_hamming2_freq_0_echo_0.nii'], 
-
+    'sub-000' : ['/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID112_31P_MT_cATP_FA0_PCr_VA12_FID16768_filter_hamming2_freq_0_echo_0.nii',
+                '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID110_31P_MT_cATP_FA0_PCr_VA24_FID16766_filter_hamming2_freq_0_echo_0.nii',
+            '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID103_31P_MT_cATP_FA0_PCr_VA36_FID16759_filter_hamming2_freq_0_echo_0.nii',
+            '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-01-20/meas_MID108_31P_MT_cATP_FA0_PCr_VA48_FID16764_filter_hamming2_freq_0_echo_0.nii'], 
+  'sub-001' : ['/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID103_31P_MT_cATP_FA0_PCr_VA12_FID19046_filter_hamming2_freq_0_echo_0.nii',
+                '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID102_31P_MT_cATP_FA0_PCr_VA24_FID19045_filter_hamming2_freq_0_echo_0.nii',
+            '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID101_31P_MT_cATP_FA0_PCr_VA36_FID19044_filter_hamming2_freq_0_echo_0.nii',
+            '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID99_31P_MT_cATP_FA0_PCr_VA48_FID19042_filter_hamming2_freq_0_echo_0.nii'],
+  'sub-002' : ['/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID122_31P_MT_cATP_FA0_PCr_VA12_FID19065_filter_hamming2_freq_0_echo_0.nii',
+                '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID121_31P_MT_cATP_FA0_PCr_VA24_FID19064_filter_hamming2_freq_0_echo_0.nii',
+            '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID120_31P_MT_cATP_FA0_PCr_VA36_FID19063_filter_hamming2_freq_0_echo_0.nii',
+            '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID118_31P_MT_cATP_FA0_PCr_VA48_FID19061_filter_hamming2_freq_0_echo_0.nii'], 
 
     'FA_nominal' : [12,24,36,48],
     'T1' : 6.7,
@@ -51,7 +58,11 @@ INITIALIZATION_B1['template'] = {
     } 
 
 INITIALIZATION_B1['output_dir'] ={
+    'sub-000' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/',
+    'sub-001' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/',
+    'sub-002' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/',
+
     'sub-01' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/2021-01-29/',
-    'sub-02' : '/neurospin/ciclops/people/Renata/RrocessedData/B1Map/2021-02-03/',
+    'sub-02' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/2021-02-03/',
 
 }  

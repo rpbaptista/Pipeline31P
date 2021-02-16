@@ -7,6 +7,9 @@ Created on Wed Sep  9 15:33:54 2020
 
 import numpy as np
 import sys, os
+from scipy.optimize import curve_fit
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
 
 sys.path.append(os.path.join(sys.path[0],'./utils_own/'))
 
@@ -21,6 +24,30 @@ def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha]).flatten()
 """
 
+def imageFitPolyN(image,degree):
+    
+    shape_ = image.shape
+    imageFitted = np.zeros(shape_)
+    poly = PolynomialFeatures(degree)
+
+    x = np.linspace(0, shape_[0] - 1, shape_[0])
+    y = np.linspace(0, shape_[1] - 1, shape_[1])
+  #  z = np.linspace(0, shape_[2] - 1, shape_[2])
+
+    X, Y = np.meshgrid(x, y, copy=False)  
+    coor = np.dstack((X,Y))
+    coor = coor.reshape(-1,2)
+
+ #   y = coor[:,0]**2-3*coor[:,1]**3+2*coor[:,0]*coor[:,1]-5
+
+    for i in range(shape_[2]):
+        coor_t = poly.fit_transform(coor)
+        clf = LinearRegression()
+        image2D = np.squeeze(image[:,:,i])
+        clf.fit(coor_t, image2D.reshape(-1,1) )
+        y_predict = clf.predict(coor_t)
+        imageFitted[:,:,i]  = y_predict.reshape((shape_[0], shape_[1])   )
+    return imageFitted
 def imageToMNI(template,anat,image, output_dir):
     print("--Realigned anat to TEMPLATE")
     calc_coreg_imgs(template, [anat], os.path.join(output_dir,'anat_register_mni.mat'))

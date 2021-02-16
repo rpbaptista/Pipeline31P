@@ -23,7 +23,7 @@ from parameters.initialization_b1map import *
 from utils import openArrayImages
 spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
-data = INITIALIZATION_B1['b1_database'] 
+data = INITIALIZATION_B1['b1_database_phantom'] 
 init = INITIALIZATION_B1
 
 # Simulating data
@@ -39,8 +39,8 @@ N_iterations = 1000
 
 idx_courone = [9,6,9] 
 
-DENOISE = True
-RUN_INDIVIDUAL = False
+DENOISE = False
+RUN_INDIVIDUAL = True
 # REAL DATA
 keys_sub = search_keys_sub(data)
 print("Compute individual maps")
@@ -57,6 +57,7 @@ for sub in keys_sub:
    
     patch_size = 5
     patch_distance = 6
+    degres_poly = 10
     sigma_est = np.mean(estimate_sigma(SFdata[0,:,:,0], multichannel=False))
     patch_kw = dict(patch_size=patch_size,      # 5x5 patches
                 patch_distance=patch_distance)
@@ -67,15 +68,17 @@ for sub in keys_sub:
                                     fast_mode=True, **patch_kw)  
         img = nib.Nifti1Image(np.squeeze(SFdata_denoised[i,:,:,:]), np.eye(4))
                                 
-        nib.save(img, "filter_nlm_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+"_img_"+str(i)+".nii")
+        nib.save(img,os.path.join(init['output_dir'][sub],"filter_nlm_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+"_img_"+str(i)+".nii"))
     
     if DENOISE == True:
         y_values_denoised = yFromSFdata(SFdata_denoised)
         y_values = y_values_denoised
         filename_output = "result_carte_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+".nii"
+        filename_fit_output = "result_carte_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+"_fit_pol"+str(degres_poly)+".nii"
         error_output = "result_error_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+".nii"
     else:
         filename_output = "result_carte_b1_"+sub+".nii"
+        filename_fit_output = "result_carte_b1_"+sub+"_fit_pol"+str(degres_poly)+".nii"
         error_output = "result_error_b1_"+sub+".nii"
 
     if RUN_INDIVIDUAL == True:
@@ -89,7 +92,11 @@ for sub in keys_sub:
         error_ = err.reshape((shape[1], shape[2], shape[3]))
         img = nib.Nifti1Image(np.squeeze(error_), np.eye(4))
         nib.save(img,  os.path.join(init['output_dir'][sub],error_output))
-
+        
+        # Saving B1 map + poluy
+    
+        img = nib.Nifti1Image(imageFitPolyN(np.squeeze(array),degres_poly ), np.eye(4))
+        nib.save(img, os.path.join(init['output_dir'][sub],filename_fit_output))
         # alpha_estim = array[idx_courone[0] , idx_courone[1], idx_courone[2]  ] 
         # s_obs =   SFdata[:,idx_courone[0],idx_courone[1],idx_courone[2] ] 
         # s_obs_deno =   SFdata_denoised[:,idx_courone[0],idx_courone[1],idx_courone[2] ] 

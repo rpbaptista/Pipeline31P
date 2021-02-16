@@ -44,7 +44,7 @@ from utils_own.bloch_equations import getMagMat, mag_signal_N
 # Set SPM path
 #matlab_cmd = '/volatile/softwares/standalone_spm/spm12/run_spm12.sh /volatile/softwares/MATLAB/MATLAB_Compiler_Runtime/v713/ script'
 #spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-#spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
+#
 import sys
 
 def run_pipeline(sub,roi_id,args):
