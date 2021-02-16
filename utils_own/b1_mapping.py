@@ -24,29 +24,34 @@ def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha]).flatten()
 """
 
-def imageFitPolyN(image,degree):
-    
+def imageFitPolyN(image,degree, mask = None):
+    if mask is not None:
+        mask = mask /np.max(mask)
+        image = image*mask
+
     shape_ = image.shape
+  #  shape_ =(2,2,2) 
     imageFitted = np.zeros(shape_)
     poly = PolynomialFeatures(degree)
 
-    x = np.linspace(0, shape_[0] - 1, shape_[0])
-    y = np.linspace(0, shape_[1] - 1, shape_[1])
-  #  z = np.linspace(0, shape_[2] - 1, shape_[2])
+    x = np.linspace(0, shape_[0] - 1, shape_[0]) +10# - np.round(shape_[0]/2)
+    y = np.linspace(0, shape_[1] - 1, shape_[1])+ 100# - np.round(shape_[1]/2)
+    z = np.linspace(0, shape_[2] - 1, shape_[2])# - np.round(shape_[2]/2)
 
-    X, Y = np.meshgrid(x, y, copy=False)  
-    coor = np.dstack((X,Y))
-    coor = coor.reshape(-1,2)
+    X, Y, Z = np.meshgrid(x, y, z, copy=False)
 
- #   y = coor[:,0]**2-3*coor[:,1]**3+2*coor[:,0]*coor[:,1]-5
+    coor = np.dstack((X.reshape(-1,1),Y.reshape(-1,1),Z.reshape(-1,1)))
+    coor = coor.reshape(-1,3)
+    coor_t = poly.fit_transform(coor)
 
-    for i in range(shape_[2]):
-        coor_t = poly.fit_transform(coor)
-        clf = LinearRegression()
-        image2D = np.squeeze(image[:,:,i])
-        clf.fit(coor_t, image2D.reshape(-1,1) )
-        y_predict = clf.predict(coor_t)
-        imageFitted[:,:,i]  = y_predict.reshape((shape_[0], shape_[1])   )
+    clf = LinearRegression()
+    image_flat = image.reshape(-1,1)
+    clf.fit(coor_t, image_flat )
+    y_predict = clf.predict(coor_t)
+#print(clf.coef_,clf.intercept_,clf.score(coor_t, image_flat), np.sum(y_predict-image_flat) )
+
+   #  imageFitted[:,:,i]  = y_predict.reshape((shape_[0], shape_[1])   )
+    imageFitted[:,:,:] =  y_predict.reshape((shape_[0], shape_[1], shape_[2] )   )
     return imageFitted
 def imageToMNI(template,anat,image, output_dir):
     print("--Realigned anat to TEMPLATE")
