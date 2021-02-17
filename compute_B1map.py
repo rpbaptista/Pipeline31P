@@ -68,7 +68,7 @@ for sub in keys_sub:
    
     patch_size = 5
     patch_distance = 6
-    degres_poly = 12
+    degres_poly = 10
     sigma_est = np.mean(estimate_sigma(SFdata[0,:,:,0], multichannel=False))
     patch_kw = dict(patch_size=patch_size,      # 5x5 patches
                 patch_distance=patch_distance)
@@ -101,6 +101,7 @@ for sub in keys_sub:
         array = results.reshape((shape[1], shape[2], shape[3]))
         img = nib.Nifti1Image(np.squeeze(array), np.eye(4))
         nib.save(img, os.path.join(init['output_dir'][sub],filename_output))
+
         # Saving B1 error map
         error_ = err.reshape((shape[1], shape[2], shape[3]))
         img = nib.Nifti1Image(np.squeeze(error_), np.eye(4))
@@ -111,26 +112,7 @@ for sub in keys_sub:
 
         img = nib.Nifti1Image(imageFitPolyN(np.squeeze(array),degres_poly,mask  ), np.eye(4))
         nib.save(img, os.path.join(init['output_dir'][sub],filename_fit_output))
-        # alpha_estim = array[idx_courone[0] , idx_courone[1], idx_courone[2]  ] 
-        # s_obs =   SFdata[:,idx_courone[0],idx_courone[1],idx_courone[2] ] 
-        # s_obs_deno =   SFdata_denoised[:,idx_courone[0],idx_courone[1],idx_courone[2] ] 
-        # print(s_obs, s_obs_deno)
-        # alphas = get_sequence_alpha(alpha_estim)
-        # s_estimate = equation_B1(init['T1'] ,init['TR'], alphas, 1)
-        # den = np.sum(np.power(s_estimate,2))
-        # num = np.sum(s_obs*s_estimate)
-        # S0 = num/den
-        # plt.title('Signal ')
-        # plt.xlabel('alpha [°]')
-        # plt.plot(alphas, s_obs, 'gx', label='S_measure')
-        # plt.plot(alphas, s_obs_deno, 'rx',label='S_measure_den')
-        # alpha_fit = np.linspace(1,65,65)
-        # plt.plot(alpha_fit,  equation_B1(init['T1'] ,
-        #                                     init['TR'],
-        #                                     alpha_fit, 1)*S0,
-        #                                     'b', label='S_fit')
-        # plt.legend()
-    #  plt.show()
+        
 
 print("Compute average map")
 for sub in keys_sub:

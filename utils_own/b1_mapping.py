@@ -25,34 +25,62 @@ def get_sequence_alpha(alpha):
 """
 
 def imageFitPolyN(image,degree, mask = None):
+
     if mask is not None:
         mask = mask /np.max(mask)
         image = image*mask
+    else:
+        mask = np.ones(image.shape)
+    
+    maks_flat = mask.reshape(-1,1)
+    ind_zeros = np.argwhere(maks_flat == 0)
+    ind_nonzeros = np.argwhere(maks_flat != 0)
 
     shape_ = image.shape
-  #  shape_ =(2,2,2) 
     imageFitted = np.zeros(shape_)
     poly = PolynomialFeatures(degree)
 
-    x = np.linspace(0, shape_[0] - 1, shape_[0]) +10# - np.round(shape_[0]/2)
-    y = np.linspace(0, shape_[1] - 1, shape_[1])+ 100# - np.round(shape_[1]/2)
-    z = np.linspace(0, shape_[2] - 1, shape_[2])# - np.round(shape_[2]/2)
+    x = np.linspace(0, shape_[0] - 1, shape_[0]) 
+    y = np.linspace(0, shape_[1] - 1, shape_[1])
+    z = np.linspace(0, shape_[2] - 1, shape_[2])
 
     X, Y, Z = np.meshgrid(x, y, z, copy=False)
-
-    coor = np.dstack((X.reshape(-1,1),Y.reshape(-1,1),Z.reshape(-1,1)))
+    
+    X_f = X.reshape(-1,1)
+    Y_f = Y.reshape(-1,1)
+    Z_f = Z.reshape(-1,1)
+    
+    coor = np.dstack((X_f,Y_f,Z_f))
     coor = coor.reshape(-1,3)
     coor_t = poly.fit_transform(coor)
+   
 
+    X_nz = np.delete(X_f,ind_zeros)
+    Y_nz = np.delete(Y_f,ind_zeros)
+    Z_nz = np.delete(Z_f,ind_zeros)
+    
+    # to fit 
+    coor_nz = np.dstack((X_nz,Y_nz,Z_nz))
+    coor_nz = coor_nz.reshape(-1,3)
+    coor_nz_t = poly.fit_transform(coor_nz)
+    
     clf = LinearRegression()
     image_flat = image.reshape(-1,1)
-    clf.fit(coor_t, image_flat )
+    image_flat_nz = np.delete(image_flat,ind_zeros)
+    clf.fit(coor_nz_t, image_flat_nz )
+
+    # to predict in all points 
     y_predict = clf.predict(coor_t)
+    imageFitted = y_predict.reshape((shape_[0], shape_[1], shape_[2] ) )
+    imageFitted = imageFitted*mask
+  #  for i in range(ind_nonzeros.shape[0] ):
+  #      imageFitted[ind_nonzeros[i,0],ind_nonzeros[i,1],ind_nonzeros[:,2] ] = y_predict[i] 
 #print(clf.coef_,clf.intercept_,clf.score(coor_t, image_flat), np.sum(y_predict-image_flat) )
 
    #  imageFitted[:,:,i]  = y_predict.reshape((shape_[0], shape_[1])   )
-    imageFitted[:,:,:] =  y_predict.reshape((shape_[0], shape_[1], shape_[2] )   )
+  #  imageFitted[:,:,:] =  y_predict.reshape((shape_[0], shape_[1], shape_[2] )   )
     return imageFitted
+
 def imageToMNI(template,anat,image, output_dir):
     print("--Realigned anat to TEMPLATE")
     calc_coreg_imgs(template, [anat], os.path.join(output_dir,'anat_register_mni.mat'))
