@@ -68,7 +68,7 @@ for sub in keys_sub:
    
     patch_size = 5
     patch_distance = 6
-    degres_poly = 10
+    degres_poly = 8
     sigma_est = np.mean(estimate_sigma(SFdata[0,:,:,0], multichannel=False))
     patch_kw = dict(patch_size=patch_size,      # 5x5 patches
                 patch_distance=patch_distance)
