@@ -52,8 +52,8 @@ INITIALIZATION_B1['anat'] = {
 
 } 
 INITIALIZATION_B1['mask'] = {
-    'sub-001' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/mask_opened_3.tif',
-    'sub-002' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/mask_opened_3.tif',
+    'sub-001' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/mask_opened_3_20.tif',
+    'sub-002' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/mask_opened_3_20.tif',
   #  'sub-01' : '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/CarteB1/2021-01-29/jl190711_20210129_001_002_t1_mpr_tra_iso2_0mm.nii',
   #  'sub-02' : '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/CarteB1/2021-02-03/pe210039_20210203_001_002_t1_mpr_tra_iso2_0mm.nii',
 
@@ -65,11 +65,18 @@ INITIALIZATION_B1['template'] = {
     } 
 
 INITIALIZATION_B1['output_dir'] ={
-    'sub-000' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/',
-    'sub-001' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/',
-    'sub-002' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/',
+    'sub-000' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-10/phantom_0',
+    'sub-001' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-10/phantom_1',
+    'sub-002' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-10/phantom_2',
 
-    'sub-01' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/2021-01-29/',
-    'sub-02' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/2021-02-03/',
+    'sub-01' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-01-29/',
+    'sub-02' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer2021-02-03/',
 
+}  
+INITIALIZATION_B1['par_postproce'] ={
+    'deg_poly': 8,
+    'patch_size': 5,
+    'patch_distance' : 6,
+    'DENOISE' : False,
+    'os_factor' : 2,
 }  

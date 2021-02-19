@@ -28,21 +28,17 @@ data = INITIALIZATION_B1['b1_database_phantom']
 init = INITIALIZATION_B1
 
 # Simulating data
-S0 = 1
-N_iterations = 1000
-
-
-# True values
-# Noise
 
 #idx_courone = [8,10,13] 
 #idx_courone = [14,10,13] 
 
 idx_courone = [9,6,9] 
-
-DENOISE = False
 RUN_INDIVIDUAL = True
-os_factor = 2
+
+
+DENOISE = init['par_postproce']['DENOISE'] 
+os_factor = init['par_postproce']['os_factor'] 
+
 # REAL DATA
 keys_sub = search_keys_sub(data)
 print("Compute individual maps")
@@ -66,9 +62,10 @@ for sub in keys_sub:
     y_values = yFromSFdata(SFdata)
     
    
-    patch_size = 5
-    patch_distance = 6
-    degres_poly = 8
+    patch_size = init['par_postproce']['patch_size'] 
+    patch_distance = init['par_postproce']['patch_distance'] 
+    degres_poly = init['par_postproce']['deg_poly'] 
+
     sigma_est = np.mean(estimate_sigma(SFdata[0,:,:,0], multichannel=False))
     patch_kw = dict(patch_size=patch_size,      # 5x5 patches
                 patch_distance=patch_distance)
@@ -76,13 +73,9 @@ for sub in keys_sub:
     if DENOISE == True:
         y_values_denoised = yFromSFdata(SFdata_denoised)
         y_values = y_values_denoised# .copy()
-        filename_output = "result_carte_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+".nii"
-        filename_fit_output = "result_carte_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+"_fit_pol"+str(degres_poly)+".nii"
-        error_output = "result_error_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+".nii"
-    else:
-        filename_output = "result_carte_b1_"+sub+".nii"
-        filename_fit_output = "result_carte_b1_"+sub+"_fit_pol"+str(degres_poly)+".nii"
-        error_output = "result_error_b1_"+sub+".nii"
+   
+    # generate strings name  
+    filename_output,filename_fit_output, error_output = getFilenameB1(sub,init,DENOISE)
     
     # fast algorithm, sigma provided
     for i in range(shape[0]):
@@ -110,7 +103,7 @@ for sub in keys_sub:
         # Saving B1 map + poluy
         mask =np.squeeze(mask)
 
-        img = nib.Nifti1Image(imageFitPolyN(np.squeeze(array),degres_poly,mask  ), np.eye(4))
+        img = nib.Nifti1Image(imageFitPolyN(np.squeeze(array),degres_poly,init['output_dir'][sub],mask  ), np.eye(4))
         nib.save(img, os.path.join(init['output_dir'][sub],filename_fit_output))
         
 

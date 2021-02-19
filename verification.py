@@ -34,11 +34,21 @@ spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
 data =[ '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID122_31P_MT_cATP_FA0_PCr_VA12_FID19065_filter_hamming2_freq_0_echo_0.nii',
       '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID103_31P_MT_cATP_FA0_PCr_VA12_FID19046_filter_hamming2_freq_0_echo_0.nii']  
-mask_path = [ '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/mask_opened_3.tif'] 
-b1_map_path = ['/neurospin/ciclops/people/Renata/ProcessedData/B1Map/Test_correction/2021-02-10/result_carte_b1_sub-001_fit_pol10.nii'] 
-concentration =[25,50] 
-os_factor = 2
 
+
+init = INITIALIZATION_B1
+keys_sub = search_keys_sub(INITIALIZATION_B1['b1_database_phantom'])
+
+sub = keys_sub[0] 
+
+mask_path = init['mask'][sub]
+DENOISE = init['par_postproce']['DENOISE']
+os_factor = init['par_postproce']['os_factor'] 
+
+filename_output, filename_fit_output, error_output = getFilenameB1(sub,init,DENOISE)
+b1_map_path =  os.path.join(init['output_dir'][sub],filename_output)
+
+concentration =[25,50] 
 SFdata_aux = openArrayImages(data)
 mask_aux = openArrayImages(mask_path)
 

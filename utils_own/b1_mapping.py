@@ -23,15 +23,33 @@ def yFromSFdata(SFdata):
 def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha]).flatten()
 """
-
-def imageFitPolyN(image,degree, mask = None):
+def getFilenameB1(sub,init,DENOISE):
+    patch_size = init['par_postproce']['patch_size'] 
+    patch_distance = init['par_postproce']['patch_distance'] 
+    degres_poly = init['par_postproce']['deg_poly']
+    if DENOISE == True:
+        filename_output = "result_carte_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+".nii"
+        filename_fit_output = "result_carte_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+"_fit_pol"+str(degres_poly)+".nii"
+        error_output = "result_error_b1_"+sub+"_den_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+".nii"
+    else:
+        filename_output = "result_carte_b1_"+sub+".nii"
+        filename_fit_output = "result_carte_b1_"+sub+"_fit_pol"+str(degres_poly)+".nii"
+        error_output = "result_error_b1_"+sub+".nii"
+    return filename_output,filename_fit_output, error_output
+    
+def imageFitPolyN(image,degree, output_dir, mask = None):
 
     if mask is not None:
         mask = mask /np.max(mask)
         image = image*mask
+        filename_out = os.path.join(output_dir, "fit_lin_deg_{0}_masked.pickle".format(degree))
     else:
         mask = np.ones(image.shape)
-    
+        filename_out = os.path.join(output_dir, "fit_lin_deg_{0}_masked.pickle".format(degree))
+
+    import pickle
+
+
     maks_flat = mask.reshape(-1,1)
     ind_zeros = np.argwhere(maks_flat == 0)
     ind_nonzeros = np.argwhere(maks_flat != 0)
@@ -69,16 +87,14 @@ def imageFitPolyN(image,degree, mask = None):
     image_flat_nz = np.delete(image_flat,ind_zeros)
     clf.fit(coor_nz_t, image_flat_nz )
 
+    with open(filename_out, 'wb') as f:    
+        pickle.dump(clf.coef_, f)
+        pickle.dump(clf.intercept_, f)
     # to predict in all points 
     y_predict = clf.predict(coor_t)
     imageFitted = y_predict.reshape((shape_[0], shape_[1], shape_[2] ) )
     imageFitted = imageFitted*mask
-  #  for i in range(ind_nonzeros.shape[0] ):
-  #      imageFitted[ind_nonzeros[i,0],ind_nonzeros[i,1],ind_nonzeros[:,2] ] = y_predict[i] 
-#print(clf.coef_,clf.intercept_,clf.score(coor_t, image_flat), np.sum(y_predict-image_flat) )
-
-   #  imageFitted[:,:,i]  = y_predict.reshape((shape_[0], shape_[1])   )
-  #  imageFitted[:,:,:] =  y_predict.reshape((shape_[0], shape_[1], shape_[2] )   )
+  
     return imageFitted
 
 def imageToMNI(template,anat,image, output_dir):
