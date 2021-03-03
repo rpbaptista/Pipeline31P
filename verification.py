@@ -32,8 +32,8 @@ from scipy import ndimage, misc
 
 spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
-data =[ '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID122_31P_MT_cATP_FA0_PCr_VA12_FID19065_filter_hamming2_freq_0_echo_0.nii',
-      '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Phantom/2021-02-10/meas_MID103_31P_MT_cATP_FA0_PCr_VA12_FID19046_filter_hamming2_freq_0_echo_0.nii']  
+data =[ '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-21/position_12_5_noscale.nii',
+      '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-21/angle_12_25mM_40pix_noscale.nii']  
 
 
 init = INITIALIZATION_B1
@@ -46,7 +46,7 @@ DENOISE = init['par_postproce']['DENOISE']
 os_factor = init['par_postproce']['os_factor'] 
 
 filename_output, filename_fit_output, error_output = getFilenameB1(sub,init,DENOISE)
-b1_map_path =  os.path.join(init['output_dir'][sub],filename_output)
+b1_map_path =  os.path.join(init['output_dir'][sub],filename_fit_output)
 
 concentration =[25,50] 
 SFdata_aux = openArrayImages(data)
@@ -74,7 +74,7 @@ for i in range (shape_[1]):
     for j in range(shape_[2]):
         for k in range(shape_[3]):
             carte_b1 = b1_map[i,j,k]
-            aux = signal_equation(0.25, 1,  carte_b1 , 6.7)
+            aux = signal_equation(0.25, 1,  carte_b1 , 6.7)/signal_equation(0.25, 1,  12.5 , 6.7)
             if np.abs(aux) < 1e-4:
                corrected[0,i,j,k] = -1
                corrected[1,i,j,k] = -1
@@ -84,34 +84,59 @@ for i in range (shape_[1]):
             
     
 corrected[corrected <= -0] = 0
-mask = ndimage.binary_erosion(mask, structure=np.ones((4,4,4)))
+mask = ndimage.binary_erosion(mask, structure=np.ones((5,5,5)))
 
 # Create b1- map from 50mM, segunda imagem
-B1_reception = 1/(corrected[1,:,:,:] /concentration[1]) 
+B1_reception = (corrected[1,:,:,:] /concentration[1]) 
 B1_reception = np.nan_to_num(B1_reception, nan=0)
 
 img = nib.Nifti1Image(B1_reception *mask, np.eye(4))
-nib.save(img, 'B1_map_reception.nii')
+nib.save(img, os.path.join(init['output_dir'][sub],'B1_map_reception_inversion.nii'))
 img = nib.Nifti1Image(np.squeeze(corrected[0,:,:,:]/concentration[0])*mask, np.eye(4))
-nib.save(img, 'corrected_25mM_transmission_only.nii')
+nib.save(img, os.path.join(init['output_dir'][sub],'corrected_25mM_transmission_only.nii'))
 
-correct_bothways = np.squeeze(corrected[0,:,:,:]/concentration[0])*B1_reception
+
+
+mask_erode = ndimage.binary_erosion(mask, structure=np.ones((4,4,4)))
+
+
+correct_bothways = np.squeeze(corrected[0,:,:,:]/concentration[0])*(1/B1_reception)
 
 img = nib.Nifti1Image(correct_bothways*mask, np.eye(4))
-nib.save(img, 'corrected_25mM_transmission_reception.nii')
+nib.save(img, os.path.join(init['output_dir'][sub],'corrected_25mM_transmission_reception_inversion.nii'))
 
-y = maskImageToArray(np.squeeze(corrected[1,:,:,:]),mask)
-x = maskImageToArray(b1_map,mask)
+img = nib.Nifti1Image(np.squeeze(corrected[1,:,:,:]/concentration[1])*mask/B1_reception, np.eye(4))
+nib.save(img, os.path.join(init['output_dir'][sub],'corrected_50mM_transmission_reception_inversion.nii'))
 
-slope, intercept, r, p, se =  stats.linregress(x, y)
-print("slope",slope)
-plt.plot(x,y,'o')
-x_full = np.arange(x.min(),x.max(),200)
-plt.plot(x_full, x_full*slope+intercept)
+y = maskImageToArray(np.squeeze(corrected[1,:,:,:]/concentration[1]),mask_erode)
+x = maskImageToArray(b1_map,mask_erode)
+
+
+res =  stats.linregress(x, y)
+
+B1_reception_k = (b1_map*res.slope+res.intercept)
+img = nib.Nifti1Image(B1_reception_k *mask, np.eye(4))
+nib.save(img, os.path.join(init['output_dir'][sub],'B1_map_reception_prop.nii'))
+correct_bothways_ = np.squeeze(corrected[0,:,:,:]/concentration[0])*(1/B1_reception_k)
+
+img = nib.Nifti1Image(correct_bothways_*mask, np.eye(4))
+nib.save(img, os.path.join(init['output_dir'][sub],'corrected_25mM_transmission_reception_kproportional.nii'))
+
+correct_bothways_ = np.squeeze(corrected[1,:,:,:]/concentration[1])*(1/B1_reception_k)
+
+img = nib.Nifti1Image(correct_bothways_*mask, np.eye(4))
+nib.save(img, os.path.join(init['output_dir'][sub],'corrected_50mM_transmission_reception_kproportional.nii'))
+
+#x_full = np.arange(x.min(),x.max(),200)
+y_fitted = x*res.slope+res.intercept
+print("slope",res.slope, "intercept", res.intercept)
+plt.plot(x, y,'o',label='original data')
+plt.plot(x, y_fitted,'r',label='fitted line')
 plt.ylabel('M0 / mM')
 plt.xlabel('FA map')
+plt.legend()
 plt.show()
-print(r)
+print(res.rvalue)
 
 # 
 

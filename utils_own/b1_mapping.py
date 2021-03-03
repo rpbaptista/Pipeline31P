@@ -10,7 +10,7 @@ import sys, os
 from scipy.optimize import curve_fit
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
-
+import pickle
 sys.path.append(os.path.join(sys.path[0],'./utils_own/'))
 
 from utils_own.model import * 
@@ -23,6 +23,12 @@ def yFromSFdata(SFdata):
 def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha]).flatten()
 """
+
+def showPolyN(picke_file):
+    with open(picke_file, "r") as input_file:
+        e = pickle.load(input_file)
+        print(e)
+
 def getFilenameB1(sub,init,DENOISE):
     patch_size = init['par_postproce']['patch_size'] 
     patch_distance = init['par_postproce']['patch_distance'] 
@@ -36,7 +42,16 @@ def getFilenameB1(sub,init,DENOISE):
         filename_fit_output = "result_carte_b1_"+sub+"_fit_pol"+str(degres_poly)+".nii"
         error_output = "result_error_b1_"+sub+".nii"
     return filename_output,filename_fit_output, error_output
-    
+
+def getFilenameFilter(init,len_array):
+    patch_size = init['par_postproce']['patch_size'] 
+    patch_distance = init['par_postproce']['patch_distance'] 
+    filter_filename =[] 
+    for i in range(len_array):
+        filter_filename.append("filter_nlm_patch_size_"+str(patch_size)+"_patch_distance_"+str(patch_distance)+"_img_"+str(i)+".nii")
+
+    return filter_filename
+
 def imageFitPolyN(image,degree, output_dir, mask = None):
 
     if mask is not None:
@@ -97,23 +112,65 @@ def imageFitPolyN(image,degree, output_dir, mask = None):
   
     return imageFitted
 
-def imageToMNI(template,anat,image, output_dir):
+def imageToMNI(init, sub, data):
+    template = init['template']['mni'] 
+    anat = init['anat'][sub]
+    images = data[sub].copy()
+    output_dir = init['output_dir'][sub]
+    DENOISE = init['par_postproce']['DENOISE'] 
+
+    filename_output,filename_fit_output, error_output = getFilenameB1(sub,init,DENOISE)
+
+
+    print("--Intra-align 31Ps .")
+    output_base = add_path(images, output_dir)
+    map_fit_output = add_path(filename_fit_output, output_dir)
+    output_realign = add_prefix(output_base, 'r_')
+
+    calc_coreg_imgs(output_base[0], output_base, os.path.join(output_dir,'31P_31P_Pcr.mat'))
+    apply_transf_imgs(images, os.path.join(output_dir,'inverse_31P_31P_Pcr.mat') , output_realign)
+ 
+    print("--Align 31P to 31P anat")
+    calc_coreg_imgs(anat,[ output_realign[0]] , os.path.join(output_dir,'31P_31P_anat.mat'))
+    output_realign_2 = add_prefix(output_base, '2r_')
+    map_realign_2 = add_prefix(map_fit_output, '2r_')
+    apply_transf_imgs(output_realign, os.path.join(output_dir,'inverse_31P_31P_anat.mat') , output_realign_2, True)
+    apply_transf_imgs(map_fit_output , os.path.join(output_dir,'inverse_31P_31P_anat0.mat') , map_realign_2, True)
+
+
     print("--Realigned anat to TEMPLATE")
     calc_coreg_imgs(template, [anat], os.path.join(output_dir,'anat_register_mni.mat'))
     
     realign_anat = add_prefix(anat, 'r')
-    resliced_1H_MNI = add_prefix(realign_anat, 'fsl_r')
-    warp_file = resliced_1H_MNI.replace('.nii', '_warpcoef.nii')
+    resliced_31P_MNI = add_prefix(realign_anat, 'fsl_r')
+    warp_file = resliced_31P_MNI.replace('.nii', '_warpcoef.nii')
+  #  fsl_anat(aux, resliced_31P_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template, brain=False)
 
-    apply_transf_imgs([anat], os.path.join(output_dir,'inverse_anat_register_mni.mat') , [realign_anat])
+    apply_transf_imgs([anat], os.path.join(output_dir,'anat_register_mni.mat') , [realign_anat])
+    print("--Apply same linear transform to 31P maps")
+    output_final = add_prefix(output_base, 'final_')
+    map_final= add_prefix(map_fit_output, 'final_')
+
+    apply_transf_imgs(output_realign_2, os.path.join(output_dir,'inverse_anat_register_mni.mat') , output_final, True)
+    apply_transf_imgs(map_realign_2 , os.path.join(output_dir,'inverse_anat_register_mni0.mat') , map_final , True)
     
-    print("--Reslice anat 1H into MNI")
-    reslice(template, realign_anat)
-    aux = add_prefix(realign_anat, 'r')
-    fsl_anat(aux, resliced_1H_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template, brain=False)
+    print("--Reslice anat 31P into MNI")
+    reslice(template, output_final)
+    reslice(template, map_final)
+    output_r_final = add_prefix(output_final, 'r')
+    map_r_final = add_prefix(map_final, 'r')
+
+    print("--Apply warp 31P ...")
+    apply_warp(resliced_31P_MNI, template, warp_file, prefix='warp',  forceNii = True)
+    apply_warp(map_r_final, template, warp_file, prefix='warp',  forceNii = True)
+
+    for i in range(len(output_r_final)):
+        apply_warp(output_r_final[i] , template,  warp_file, prefix='warp', forceNii = True)
+
+
     return 0
 
-
+    
 def B1mapFromYvalues(y_values,init):
     results = np.zeros(y_values[:,0].shape)
     err = np.zeros(y_values[:,0].shape)

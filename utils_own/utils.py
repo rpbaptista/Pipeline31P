@@ -73,14 +73,14 @@ def apply_transf(moving, mat_file, output_file):
 def apply_transf_imgs(array_moving, output_mat_base, output_file, same_mat= False):
     if isinstance(array_moving, str):
         apply_transf(array_moving, output_mat_base, output_file)
-  
-    for i in range(len(array_moving)):
-        if same_mat == True:
-            output_mat = output_mat_base.replace('.mat', '0.mat')
-        else:
-            output_mat = output_mat_base.replace('.mat', '{0}.mat'.format(i))
-        
-        apply_transf(array_moving[i], output_mat, output_file[i])
+    else:
+        for i in range(len(array_moving)):
+            if same_mat == True:
+                output_mat = output_mat_base.replace('.mat', '0.mat')
+            else:
+                output_mat = output_mat_base.replace('.mat', '{0}.mat'.format(i))
+            
+            apply_transf(array_moving[i], output_mat, output_file[i])
 
 def reslice(target, in_files):
     r2ref = spmu.Reslice()
@@ -97,16 +97,32 @@ def reslice(target, in_files):
             r2ref.run()
 
 def add_prefix(fullpath, prefix=''):
+
     if isinstance(fullpath, list):
-        for i in range(len(fullpath)):
-            split = os.path.split(fullpath[i])
-            fullpath[i] = os.path.join(split[0], prefix + split[1])
+        modify_fullpath = fullpath.copy()
+
+        for i in range(len(modify_fullpath)):
+            split = os.path.split(modify_fullpath[i])
+            modify_fullpath[i] = os.path.join(split[0], prefix + split[1])
     else:
-        split = os.path.split(fullpath)
-        fullpath = os.path.join(split[0], prefix + split[1])
+        modify_fullpath = fullpath
 
-    return fullpath 
+        split = os.path.split(modify_fullpath)
+        modify_fullpath = os.path.join(split[0], prefix + split[1])
 
+    return modify_fullpath 
+def add_path(path, output):
+    if isinstance(path, list):
+        modify_fullpath = path.copy()
+
+        for i in range(len(modify_fullpath)):
+            modify_fullpath[i] = os.path.join(output,modify_fullpath[i] )
+    else:
+        modify_fullpath = path
+
+        modify_fullpath = os.path.join(output,modify_fullpath)
+
+    return modify_fullpath 
 
 #def add_sufix(fullpath, sufix=''):
 #    if isinstance(fullpath, list):
