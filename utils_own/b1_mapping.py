@@ -122,37 +122,45 @@ def imageToMNI(init, sub, data):
     filename_output,filename_fit_output, error_output = getFilenameB1(sub,init,DENOISE)
 
 
-    print("--Intra-align 31Ps .")
+#    print("--Intra-align 31Ps .")
     output_base = add_path(images, output_dir)
     map_fit_output = add_path(filename_fit_output, output_dir)
     output_realign = add_prefix(output_base, 'r_')
 
-    calc_coreg_imgs(output_base[0], output_base, os.path.join(output_dir,'31P_31P_Pcr.mat'))
-    apply_transf_imgs(images, os.path.join(output_dir,'inverse_31P_31P_Pcr.mat') , output_realign)
+#    calc_coreg_imgs(output_base[0], output_base, os.path.join(output_dir,'31P_31P_Pcr.mat'))
+   
+#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr0.mat'))
+#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr1.mat'))
+#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr2.mat'))
+#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr3.mat'))
+
+#    apply_transf_imgs(output_base, os.path.join(output_dir,'inverse_31P_31P_Pcr.mat') , output_realign)
  
     print("--Align 31P to 31P anat")
-    calc_coreg_imgs(anat,[ output_realign[0]] , os.path.join(output_dir,'31P_31P_anat.mat'))
-    output_realign_2 = add_prefix(output_base, '2r_')
-    map_realign_2 = add_prefix(map_fit_output, '2r_')
-    apply_transf_imgs(output_realign, os.path.join(output_dir,'inverse_31P_31P_anat.mat') , output_realign_2, True)
-    apply_transf_imgs(map_fit_output , os.path.join(output_dir,'inverse_31P_31P_anat0.mat') , map_realign_2, True)
+    calc_coreg_imgs(anat,[ output_base[0]] , os.path.join(output_dir,'31P_31P_anat.mat'))
+ 
+    forceNotRotationMat(os.path.join(output_dir,'31P_31P_anat0.mat'))
+ 
+ #   output_realign_2 = add_prefix(output_base, '2r_')
+    map_realign = add_prefix(map_fit_output, 'r_')
+    apply_transf_imgs(output_base, os.path.join(output_dir,'inverse_31P_31P_anat.mat') , output_realign, True)
+    apply_transf_imgs(map_fit_output , os.path.join(output_dir,'inverse_31P_31P_anat0.mat') , map_realign, True)
 
 
     print("--Realigned anat to TEMPLATE")
     calc_coreg_imgs(template, [anat], os.path.join(output_dir,'anat_register_mni.mat'))
-    
     realign_anat = add_prefix(anat, 'r')
+    apply_transf_imgs([anat], os.path.join(output_dir,'inverse_anat_register_mni.mat') , [realign_anat])
     resliced_31P_MNI = add_prefix(realign_anat, 'fsl_r')
     warp_file = resliced_31P_MNI.replace('.nii', '_warpcoef.nii')
-  #  fsl_anat(aux, resliced_31P_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template, brain=False)
-
-    apply_transf_imgs([anat], os.path.join(output_dir,'anat_register_mni.mat') , [realign_anat])
+    fsl_anat(realign_anat, resliced_31P_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template, brain=False)
+    
     print("--Apply same linear transform to 31P maps")
     output_final = add_prefix(output_base, 'final_')
     map_final= add_prefix(map_fit_output, 'final_')
 
-    apply_transf_imgs(output_realign_2, os.path.join(output_dir,'inverse_anat_register_mni.mat') , output_final, True)
-    apply_transf_imgs(map_realign_2 , os.path.join(output_dir,'inverse_anat_register_mni0.mat') , map_final , True)
+    apply_transf_imgs(output_realign, os.path.join(output_dir,'inverse_anat_register_mni.mat') , output_final, True)
+    apply_transf_imgs(map_realign , os.path.join(output_dir,'inverse_anat_register_mni0.mat') , map_final , True)
     
     print("--Reslice anat 31P into MNI")
     reslice(template, output_final)
@@ -168,7 +176,7 @@ def imageToMNI(init, sub, data):
         apply_warp(output_r_final[i] , template,  warp_file, prefix='warp', forceNii = True)
 
 
-    return 0
+    return map_r_final
 
     
 def B1mapFromYvalues(y_values,init):
@@ -192,12 +200,14 @@ def B1mapFromYvalues(y_values,init):
         results[i]= pop #
         err[i]  = np.sqrt(np.diag(pcov))
     return results, err
+
 def yFromSFdata(SFdata):
     y_values_alpha_1 = SFdata[0,:,:,:].reshape((-1,1))
     y_values_alpha_2 = SFdata[1,:,:,:].reshape((-1,1))
     y_values_alpha_3 = SFdata[2,:,:,:].reshape((-1,1))
     y_values_alpha_4 = SFdata[3,:,:,:].reshape((-1,1))
     return np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3,y_values_alpha_4))
+
 def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha, 3*alpha, 4*alpha]).flatten()
 
@@ -215,7 +225,6 @@ def function_B1_double(x_values, alpha):
     S0 = num/den
     return ans*S0
 
-
 def function_B1(x_values, S0, alpha):
     T1 = x_values[0]
     TR = x_values[1]
@@ -232,16 +241,17 @@ def equation_B1(T1, TR, alpha_1, S0=1):
     S1 = signal_equation(TR, S0, alpha_1, T1)    
     return S1
 
-# def ratio_equation_b1(T1, TR, alpha_1, alpha_2, S0=1):
-#     """
-#     DAM method no relaxed T1
-#     alpha_1 deg
-#     alpha_2 deg
-#     """
-#     S1 = signal_equation(TR, S0, alpha_1, T1)
-#     S2 = signal_equation(TR, S0, alpha_2, T1)
+def ratio_equation_b1(T1, TR, alpha_1, alpha_2, S0=1):
+    """
+    DAM method no relaxed T1
+    alpha_1 deg
+    alpha_2 deg
+    """
+    S1 = signal_equation(TR, S0, alpha_1, T1)
+    S2 = signal_equation(TR, S0, alpha_2, T1)
     
     return S1/S2
+
 def search_keys_sub(dict_b1_database):
     result = []
 
