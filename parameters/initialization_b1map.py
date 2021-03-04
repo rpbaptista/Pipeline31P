@@ -56,6 +56,19 @@ INITIALIZATION_B1['b1_database'] = {
 '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-02-22/meas_MID944_31P_MT_cATP_FA0_PCr_VA36_FID20918_filter_hamming2_freq_0_echo_0.nii',
 '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-02-22/meas_MID943_31P_MT_cATP_FA0_PCr_VA48_FID20917_filter_hamming2_freq_0_echo_0.nii'] 
 ,
+
+'sub-04' : [
+'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-01/meas_MID46_31P_MT_cATP_FA0_PCr_VA12_FID21674_filter_hamming2_freq_0_echo_0.nii',
+'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-01/meas_MID45_31P_MT_cATP_FA0_PCr_VA24_FID21673_filter_hamming2_freq_0_echo_0.nii',
+'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-01/meas_MID44_31P_MT_cATP_FA0_PCr_VA36_FID21672_filter_hamming2_freq_0_echo_0.nii',
+'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-01/meas_MID43_31P_MT_cATP_FA0_PCr_VA48_FID21671_filter_hamming2_freq_0_echo_0.nii'] 
+,
+#'sub-05' : [
+#'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-04/meas_MID160_31P_MT_cATP_FA0_PCr_VA12_FID22167_filter_hamming2_freq_0_echo_0.nii',
+#'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-04/meas_MID159_31P_MT_cATP_FA0_PCr_VA24_FID22166_filter_hamming2_freq_0_echo_0.nii',
+#'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-04/meas_MID158_31P_MT_cATP_FA0_PCr_VA36_FID22165_filter_hamming2_freq_0_echo_0.nii',
+#'/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-04/meas_MID157_31P_MT_cATP_FA0_PCr_VA48_FID22164_filter_hamming2_freq_0_echo_0.nii'] 
+#,
     'FA_nominal' : [12,24,36,48],
     'T1' : 3.37,
     'TR' : 0.250,
@@ -66,7 +79,8 @@ INITIALIZATION_B1['anat'] = {
     'sub-01' : '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-01-29/jl190711_20210129_001_002_t1_mpr_tra_iso2_0mm.nii',
     'sub-02' : '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-02-03/pe210039_20210203_001_002_t1_mpr_tra_iso2_0mm.nii',
     'sub-03' : '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-02-22/ep190340_20210222_001_002_t1_mpr_tra_iso2_0mm.nii',
-
+    'sub-04' : '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-01/sl130503_20210301_001_002_t1_mpr_tra_iso2_0mm.nii',
+    'sub-05' : '/neurospin/ciclops/people/Renata/ReconstructedData/31P_Volunteer/B1Map/2021-03-04/ev070110_20210304_001_004_t1_mpr_tra_iso2_0mm.nii'
 } 
 INITIALIZATION_B1['mask'] = {
     'sub-001' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/mask_opened_3_20.tif',
@@ -76,6 +90,7 @@ INITIALIZATION_B1['mask'] = {
     'sub-01' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-01-29/mask_treated.nii',
     'sub-02' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-02-03/mask_treated.nii',
     'sub-03' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-02-22/mask_treated.nii',
+    'sub-04' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-03-01/mask_treated.nii',
 
 } 
 
@@ -90,9 +105,13 @@ INITIALIZATION_B1['output_dir'] ={
     'sub-002' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-10/phantom_2',
     'sub-003' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-21/res12',
     'sub-004' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-21/res5',
+    'volunteer' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/',
     'sub-01' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-01-29/',
     'sub-02' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-02-03/',
     'sub-03' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-02-22/',
+    'sub-04' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-03-01/',
+    'sub-05' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-03-04/',
+    'sub-06' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/2021-03-10/',
 
 }  
 INITIALIZATION_B1['par_postproce'] ={

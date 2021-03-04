@@ -48,6 +48,20 @@ def realign_imgs(in_files):
     realign.inputs.register_to_mean = False 
     realign.run()
 
+def forceNotRotationMat(path):
+    import scipy.io as sio
+    mat_contents = sio.loadmat(path)
+    M_withrotation = mat_contents['M']
+    M = np.eye(4)
+    M[:,3] = M_withrotation[:,3]
+    mat_contents['M'] = M
+    sio.savemat(path, mat_contents)
+    inv_path = add_prefix(path,'inverse_')
+    mat_contents['M'] = np.linalg.inv(M)
+    sio.savemat(inv_path, mat_contents)
+    
+
+
 def calc_coreg_img(target, moving, output_mat):
     coreg = spmu.CalcCoregAffine()
     coreg.inputs.target = target
@@ -96,21 +110,19 @@ def reslice(target, in_files):
             #r2ref.inputs.write_which = [1, 0]
             r2ref.run()
 
-def add_prefix(fullpath, prefix=''):
 
+def add_prefix(fullpath, prefix=''):
     if isinstance(fullpath, list):
         modify_fullpath = fullpath.copy()
-
         for i in range(len(modify_fullpath)):
             split = os.path.split(modify_fullpath[i])
             modify_fullpath[i] = os.path.join(split[0], prefix + split[1])
     else:
         modify_fullpath = fullpath
-
         split = os.path.split(modify_fullpath)
         modify_fullpath = os.path.join(split[0], prefix + split[1])
-
     return modify_fullpath 
+
 def add_path(path, output):
     if isinstance(path, list):
         modify_fullpath = path.copy()

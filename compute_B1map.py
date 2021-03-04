@@ -21,7 +21,7 @@ from skimage.restoration import denoise_nl_means, estimate_sigma
 # My libraries
 from utils_own.b1_mapping import *
 from parameters.initialization_b1map import *
-from utils import openArrayImages, interpolateImage, prepareHeaderOS
+from utils import openArrayImages, interpolateImage, prepareHeaderOS, getSSIM
 spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
 data = INITIALIZATION_B1['b1_database'] 
@@ -112,11 +112,23 @@ for sub in keys_sub:
         
 
 print("Compute average map")
+path_maps = [] 
 for sub in keys_sub:
+    print("-----------"+sub)
+
     if RUN_ANAT == True:
+        path_maps.append(imageToMNI(init,sub, data))
+    else:
+        filename_output,filename_fit_output, error_output = getFilenameB1(sub,init,DENOISE)
+        warp_map = add_prefix(filename_fit_output, 'warprfinal_')
+        path_maps.append(os.path.join(init['output_dir'][sub],warp_map))
+maps_mni = openArrayImages(path_maps)
+matrix_ssim = getSSIM(maps_mni)
+print(matrix_ssim)
 
-        imageToMNI(init,sub, data)
-
-   # Now we need to realign 31P with MNI
+map_general_mni = np.mean(maps_mni, axis=0)
+img = nib.Nifti1Image(map_general_mni,  None, header=header_os)
+nib.save(img, os.path.join(init['output_dir']['volunteer'],filename_fit_output))
+        
      
     
