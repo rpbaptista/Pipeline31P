@@ -84,6 +84,7 @@ def apply_transf(moving, mat_file, output_file):
     applymat.inputs.out_file = output_file
     applymat.run() 
 
+
 def apply_transf_imgs(array_moving, output_mat_base, output_file, same_mat= False):
     if isinstance(array_moving, str):
         apply_transf(array_moving, output_mat_base, output_file)

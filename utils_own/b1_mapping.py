@@ -12,6 +12,10 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 import pickle
 sys.path.append(os.path.join(sys.path[0],'./utils_own/'))
+sys.path.append(os.path.join(sys.path[0],'../../Utils/'))
+import nibabel as nib
+
+from utils import openArrayImages, saveArrayNifti, interpolateImage, prepareHeaderOS, getSSIM
 
 from utils_own.model import * 
 from utils_own.utils import * 
@@ -23,6 +27,14 @@ def yFromSFdata(SFdata):
 def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha]).flatten()
 """
+def allNameStr(path, name='sub-'):
+
+    start = path.find(name) + len(name)
+    stop = start + 2
+    # Remove charactes from index 5 to 10
+    if len(path) > stop :
+        path = path[0: start:] +'_all_' + path[stop + 1::]
+        return path
 
 def showPolyN(picke_file):
     with open(picke_file, "r") as input_file:
@@ -43,6 +55,12 @@ def getFilenameB1(sub,init,DENOISE):
         error_output = "result_error_b1_"+sub+".nii"
     return filename_output,filename_fit_output, error_output
 
+def getReceptionPaths(path_base, N_channels):
+    output = []
+    for curchannels in range(N_channels):
+        output.append(path_base.format(curchannels+1))
+
+    return output 
 def getFilenameFilter(init,len_array):
     patch_size = init['par_postproce']['patch_size'] 
     patch_distance = init['par_postproce']['patch_distance'] 
@@ -114,36 +132,44 @@ def imageFitPolyN(image,degree, output_dir, mask = None):
 
 def imageToMNI(init, sub, data):
     template = init['template']['mni'] 
+    template_mask = init['template']['mni_mask'] 
     anat = init['anat'][sub]
     images = data[sub].copy()
     output_dir = init['output_dir'][sub]
     DENOISE = init['par_postproce']['DENOISE'] 
+    os_factor = init['par_postproce']['os_factor'] 
 
     filename_output,filename_fit_output, error_output = getFilenameB1(sub,init,DENOISE)
-
-
-#    print("--Intra-align 31Ps .")
     output_base = add_path(images, output_dir)
     map_fit_output = add_path(filename_fit_output, output_dir)
     output_realign = add_prefix(output_base, 'r_')
+    output_os = add_prefix(output_base, 'os_')
 
-#    calc_coreg_imgs(output_base[0], output_base, os.path.join(output_dir,'31P_31P_Pcr.mat'))
+    print("--Align 31P to 31P anat")    
+    vols = openArrayImages(output_base)
+    shape_aux = vols.shape
+    nii = nib.load(output_base[0]) 
+    header_os = prepareHeaderOS(nii.header, os_factor)
    
-#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr0.mat'))
-#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr1.mat'))
-#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr2.mat'))
-#    forceNotRotationMat(os.path.join(output_dir,'31P_31P_Pcr3.mat'))
 
-#    apply_transf_imgs(output_base, os.path.join(output_dir,'inverse_31P_31P_Pcr.mat') , output_realign)
- 
-    print("--Align 31P to 31P anat")
-    calc_coreg_imgs(anat,[ output_base[0]] , os.path.join(output_dir,'31P_31P_anat.mat'))
- 
+    SFdata = np.zeros((shape_aux[0],shape_aux[1]*os_factor, shape_aux[2]*os_factor, shape_aux[3]*os_factor))
+    for i in range(shape_aux[0] ):
+        SFdata[i,:,:,:]  = interpolateImage(vols[i,:,:,:] , os_factor)
+    saveArrayNifti(SFdata, output_os, header_os)
+    path_filter = add_prefix(output_os, 'filter_')
+    
+    vols = openArrayImages(output_os)
+    vols_filter = median_filter_images(vols)
+    saveArrayNifti(vols_filter,path_filter, header_os)
+
+
+    calc_coreg_imgs(anat,[ path_filter[0]] , os.path.join(output_dir,'31P_31P_anat.mat'))
     forceNotRotationMat(os.path.join(output_dir,'31P_31P_anat0.mat'))
- 
- #   output_realign_2 = add_prefix(output_base, '2r_')
+    
+
+  #  output_realign_2 = add_prefix(output_base, '2r_')
     map_realign = add_prefix(map_fit_output, 'r_')
-    apply_transf_imgs(output_base, os.path.join(output_dir,'inverse_31P_31P_anat.mat') , output_realign, True)
+    # apply_transf_imgs(output_os, os.path.join(output_dir,'inverse_31P_31P_anat.mat') , output_realign, True)
     apply_transf_imgs(map_fit_output , os.path.join(output_dir,'inverse_31P_31P_anat0.mat') , map_realign, True)
 
 
@@ -153,7 +179,7 @@ def imageToMNI(init, sub, data):
     apply_transf_imgs([anat], os.path.join(output_dir,'inverse_anat_register_mni.mat') , [realign_anat])
     resliced_31P_MNI = add_prefix(realign_anat, 'fsl_r')
     warp_file = resliced_31P_MNI.replace('.nii', '_warpcoef.nii')
-    fsl_anat(realign_anat, resliced_31P_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template, brain=False)
+  #  fsl_anat(realign_anat, resliced_31P_MNI,0, warp_file,  warp_file.replace('.nii', '_inverse.nii'), template, brain=False)
     
     print("--Apply same linear transform to 31P maps")
     output_final = add_prefix(output_base, 'final_')
@@ -163,8 +189,8 @@ def imageToMNI(init, sub, data):
     apply_transf_imgs(map_realign , os.path.join(output_dir,'inverse_anat_register_mni0.mat') , map_final , True)
     
     print("--Reslice anat 31P into MNI")
-    reslice(template, output_final)
-    reslice(template, map_final)
+    reslice(resliced_31P_MNI, output_final)
+    reslice(resliced_31P_MNI, map_final)
     output_r_final = add_prefix(output_final, 'r')
     map_r_final = add_prefix(map_final, 'r')
 
@@ -175,8 +201,21 @@ def imageToMNI(init, sub, data):
     for i in range(len(output_r_final)):
         apply_warp(output_r_final[i] , template,  warp_file, prefix='warp', forceNii = True)
 
+    map_mask_final = add_prefix(map_final, 'mask')
+    vols = openArrayImages(add_prefix(map_r_final, 'warp'))
+    mask_template = np.squeeze(openArrayImages([template_mask]))
+    mask_template = mask_template/np.max(mask_template)
+    shape_aux = vols.shape
+    nii = nib.load(map_r_final)
+    header = nii.header
+    SFdata = np.zeros((shape_aux))
+    for i in range(shape_aux[0] ):
+        SFdata[i,:,:,:]  = vols[i,:,:,:]*mask_template
 
-    return map_r_final
+    saveArrayNifti(SFdata,[ map_mask_final]  , header)
+
+
+    return map_r_final, map_mask_final
 
     
 def B1mapFromYvalues(y_values,init):
