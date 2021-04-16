@@ -22,7 +22,9 @@ if only_group == False:
     for sub in subs:
         args = argPipeline(alignAnat=0,
                         align31P=0,
-                        createROI=1,
+                        createROI=0,
+                        createIndividualB1=0,
+                        applyB1Correction = 1,
                         computeStatistics=1,
                         quantification=1, 
                         BET = True) 
@@ -37,4 +39,4 @@ if only_group == False:
 
 # Group analisis
 for roi in rois:
-    run_group(subs,roi)
+    run_group(subs,roi, args.applyB1Correction)

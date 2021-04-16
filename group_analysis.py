@@ -42,7 +42,7 @@ from utils_own.model import getW1fromFAandTau
 from utils_own.bloch_equations import getMagMat, mag_signal_N
 
 
-def run_group(group_sub,roi_id):
+def run_group(group_sub,roi_id, applyB1Correction):
 
     concentrations_group = np.zeros((2,len(group_sub)))
     kinetic_group = np.zeros((len(group_sub)))
@@ -59,7 +59,11 @@ def run_group(group_sub,roi_id):
         sub_par,calib = portability(sub_par,calib, group)
     
         # read data
-        concentrations = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'concentrations')
+        if aapplyB1Correction == 1:
+            concentrations = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id+'b1_corrected', 'concentrations')
+        else:
+            concentrations = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'concentrations')
+            
         concentrations_group[0,i] =concentrations['PCr concentration [mM]'][0]
         concentrations_group[1,i] =concentrations['cATP concentration [mM]'][0]
         

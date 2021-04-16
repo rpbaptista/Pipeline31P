@@ -19,15 +19,29 @@ from utils import openArrayImages, saveArrayNifti, interpolateImage, prepareHead
 
 from utils_own.model import * 
 from utils_own.utils import * 
-"""
-def yFromSFdata(SFdata):
-    y_values_alpha_1 = SFdata[0,:,:,:].reshape((-1,1))
-    y_values_alpha_2 = SFdata[1,:,:,:].reshape((-1,1))
-    return np.hstack((y_values_alpha_1 ,y_values_alpha_2))
-def get_sequence_alpha(alpha):
-    return np.array([alpha, 2*alpha]).flatten()
-"""
 
+
+def computeCorrectionFactor(b1_map,FA_nominal, TR, T1):
+    """
+        Returns correction factor to B1 
+        input = FA_nominal in degrees
+    """
+    M0 = 1
+    b1_map = np.squeeze(b1_map)
+    b1_shape = b1_map.shape
+    
+    correction_factor_map = np.zeros(b1_shape)
+    for i in range (b1_shape[0]):
+        for j in range(b1_shape[1]):
+            for k in range(b1_shape[2]):
+                carte_b1 = b1_map[i,j,k]
+                aux = signal_equation(TR, M0,  carte_b1 , T1)/signal_equation(TR, 1,  FA_nominal , T1)
+
+                if np.abs(aux) < 1e-4:
+                    correction_factor_map[i,j,k] = -1
+                else:
+                    correction_factor_map[i,j,k] = 1/aux
+    return correction_factor_map
 
 
 def allNameStr(path, name='sub-'):
@@ -64,6 +78,7 @@ def getReceptionPaths(path_base, N_channels):
         output.append(path_base.format(curchannels+1))
 
     return output 
+
 def getFilenameFilter(init,len_array):
     patch_size = init['par_postproce']['patch_size'] 
     patch_distance = init['par_postproce']['patch_distance'] 

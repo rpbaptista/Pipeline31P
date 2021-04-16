@@ -40,6 +40,7 @@ from utils_own.argsPipeline import argPipeline
 from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask, getKf, getKab, getTheoricalValues
 from utils_own.model import getW1fromFAandTau
 from utils_own.bloch_equations import getMagMat, mag_signal_N
+from utils_own.b1_mapping import computeCorrectionFactor
 
 # Set SPM path
 #matlab_cmd = '/volatile/softwares/standalone_spm/spm12/run_spm12.sh /volatile/softwares/MATLAB/MATLAB_Compiler_Runtime/v713/ script'
@@ -81,6 +82,7 @@ def run_pipeline(sub,roi_id,args):
     # Processed mask
     mask_mni = createPath( 'mask_mni'+roi_id+'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     mask_volunteer = createPath( 'mask_volunteer'+roi_id+'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+    b1_volunteer = createPath( 'b1_volunteer'+roi_id+'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
 
 
     # Original images
@@ -197,21 +199,50 @@ def run_pipeline(sub,roi_id,args):
     else:
         print("-Skipped create ROI MNI.")
     
+    if (args.createIndividualB1 == 1):
+        print("-Create individual B1 map")
+        print("--Apply individual inverse transformation to MNI")
+        b1_mni = INITIALIZATION['b1']['path']
+        apply_warp(b1_mni, INITIALIZATION['template']['mni_brain'], warp_file.replace('.nii', '_inverse.nii'), out_file=b1_volunteer, forceNii=True)
+        apply_warp(resliced_1H_MNI_brain, INITIALIZATION['template']['mni_brain'], warp_file, prefix='warp')
+        apply_warp(add_prefix(resliced_1H_MNI_brain,'warp'), INITIALIZATION['template']['mni_brain'], warp_file, prefix='unwarp')
+
+    else:
+        print("-Skipped individual B1 MNI.")
+
     if (args.computeStatistics == 1):
         print("-Compute mean in ROI")
          
         vols_cATP = openArrayImages(r_final_realign_path_cATP)
         vols_PCr = openArrayImages(r_final_realign_path_PCr)
         mask_volunteer_vols = openArrayImages(mask_volunteer)
+        B1_volunteer_vols = openArrayImages(b1_volunteer)
+
         FA = sub_par['FA']
         FA = np.asarray(FA)
 
         stats_pcr =  []
         stats_catp =  []
-        for i in range(img_cATP.shape[0]):
-            stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer_vols))
-            stats_catp.append(statisticsImage(vols_cATP[i,:,:,:], mask_volunteer_vols))
+
+        vols_corrected_cATP = np.zeros(vols_cATP.shape)
+        vols_corrected_PCr = np.zeros(vols_PCr.shape)
         
+        if args.applyB1Correction == 1:
+            correction_factor = computeCorrectionFactor(B1_volunteer_vols,
+                                                        INITIALIZATION['b1']['FA_nominal'],
+                                                        calib['TR'] ,
+                                                        calib['Pbs']['T1'] )
+            for i in range(img_cATP.shape[0]):
+                vols_corrected_cATP[i,:,:,:] = vols_cATP[i,:,:,:] * correction_factor
+                vols_corrected_PCr[i,:,:,:]  = vols_PCr[i,:,:,:] * correction_factor
+                stats_pcr.append(statisticsImage(vols_corrected_cATP[i,:,:,:], mask_volunteer_vols))
+                stats_catp.append(statisticsImage(vols_corrected_PCr[i,:,:,:], mask_volunteer_vols))
+        else:
+            for i in range(img_cATP.shape[0]):
+                stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer_vols))
+                stats_catp.append(statisticsImage(vols_cATP[i,:,:,:], mask_volunteer_vols))
+        
+            
         listStatistics_cAtp = ListStatistics(stats_catp)
         listStatistics_PCr = ListStatistics(stats_pcr)
         
@@ -221,7 +252,11 @@ def run_pipeline(sub,roi_id,args):
         plotStatMT(FA, listStatistics_cAtp, 'cATP', 'cATP', sub_par['output_dir'],prefix = 'b_'+sub+'_'+roi_id)
     
         print("-Save excel")
-        saveExcel (FA, listStatistics_PCr, listStatistics_cAtp, 'PCr', 'cATP', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+        if args.applyB1Correction == 1:
+            saveExcel (FA, listStatistics_PCr, listStatistics_cAtp, 'PCr', 'cATP', sub_par['output_dir'], sufix=sub+'_'+roi_id+'b1_corrected')
+
+        else:
+            saveExcel (FA, listStatistics_PCr, listStatistics_cAtp, 'PCr', 'cATP', sub_par['output_dir'], sufix=sub+'_'+roi_id)
     else:
         print("-Skipped compute Statistics")
 
@@ -252,9 +287,12 @@ def run_pipeline(sub,roi_id,args):
                                 out_met= 'PCr')
         
         # read data
-       
-        listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'PCr')
-        listStatistics_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'cATP')
+        if args.applyB1Correction == 1:
+            listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'PCr')
+            listStatistics_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'cATP')
+        else:
+            listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'PCr')
+            listStatistics_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'cATP')
 
         listStatistics_PCr = updateNoise(listStatistics_PCr, noise_mean)
         listStatistics_cAtp = updateNoise(listStatistics_cAtp, noise_mean)
@@ -269,7 +307,11 @@ def run_pipeline(sub,roi_id,args):
    #                                                              (listStatistics_PCr['mean_metabolite']-noise_mean)/alpha_PCr], axis=1)
         concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
         print(concentrations)
-        appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+
+        if args.applyB1Correction == 1:
+            appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id+'b1_corrected')
+        else:
+            appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
        
         print("-- Kinetic constant")
         rangeK = np.arange(0.1,0.5,0.01)
@@ -278,11 +320,20 @@ def run_pipeline(sub,roi_id,args):
       #  Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_normalized'])
 
         print("-- is:{0} s-1 , reverse {1}".format(Kpcr_catp,ratio*Kpcr_catp))
-        appendExcel(pd.DataFrame([Kpcr_catp]), 'kinetic', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+
+        if args.applyB1Correction == 1:
+            appendExcel(pd.DataFrame([Kpcr_catp]), 'kinetic', sub_par['output_dir'], sufix=sub+'_'+roi_id+'b1_corrected')
+
+        else:
+            appendExcel(pd.DataFrame([Kpcr_catp]), 'kinetic', sub_par['output_dir'], sufix=sub+'_'+roi_id)
 
         print("-- Flux")
         flux = 60*calib['density']*Kpcr_catp*concentrations['PCr concentration [mM]'][0] 
-        appendExcel(pd.DataFrame([flux]), 'flux_ck', sub_par['output_dir'], sufix=sub+'_'+roi_id)
+
+        if args.applyB1Correction == 1:
+            appendExcel(pd.DataFrame([flux]), 'flux_ck', sub_par['output_dir'], sufix=sub+'_'+roi_id+'b1_corrected')
+        else:
+            appendExcel(pd.DataFrame([flux]), 'flux_ck', sub_par['output_dir'], sufix=sub+'_'+roi_id)
 
         Ma, Mb = getTheoricalValues(Kpcr_catp, Kpcr_catp*ratio, [0,0,1], [0,0, 1/ratio], FA_sub, calib, 'PCr', 'cATP')
         Ma = Ma/np.max(Ma)
@@ -329,6 +380,16 @@ if __name__ == '__main__':
                         default = 0)
    
     parser.add_argument("--createROI",
+                        help="0/1 to do four step analysis",
+                        type=int,
+                        default = 1)
+       
+    parser.add_argument("--createIndividualB1",
+                        help="0/1 to do four step analysis",
+                        type=int,
+                        default = 1)
+       
+    parser.add_argument("--applyB1Correction",
                         help="0/1 to do four step analysis",
                         type=int,
                         default = 1)
