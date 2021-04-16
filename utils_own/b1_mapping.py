@@ -271,9 +271,9 @@ def yFromSFdata(SFdata):
         y_values_alpha_1 = SFdata[0,:,:,:].reshape((-1,1))
         y_values_alpha_2 = SFdata[1,:,:,:].reshape((-1,1))
         y_values_alpha_3 = SFdata[2,:,:,:].reshape((-1,1))
-     #   y_values_alpha_4 = SFdata[3,:,:,:].reshape((-1,1))
-      #  output = np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3,y_values_alpha_4))
-        output = np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3))
+        y_values_alpha_4 = SFdata[3,:,:,:].reshape((-1,1))
+        output = np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3,y_values_alpha_4))
+    #    output = np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3))
     else:
         y_values_alpha_1 = SFdata[0,:,:].reshape((-1,1))
         y_values_alpha_2 = SFdata[1,:,:].reshape((-1,1))
@@ -292,9 +292,10 @@ def yFromSFdata(SFdata):
                             ))
     return output
 
-def get_sequence_alpha(alpha):
-    
-    return np.array([alpha, 2*alpha, 3*alpha]).flatten()
+def get_sequence_alpha(alpha, N=4):
+    sequence = np.arange(0,N) + 1
+    sequence = sequence*alpha
+    return np.array(sequence).flatten()
 
 def function_T1_double(x_values, T1, theta, A):
     TR = x_values[0]
@@ -308,8 +309,8 @@ def function_B1_double(x_values, alpha):
     y_obs =[]
     for i in range(len(x_values )-2):
         y_obs.append(x_values[i+2] ) 
-
-    alphas = get_sequence_alpha(alpha)
+    N = len(x_values )-2
+    alphas = get_sequence_alpha(alpha, N)
     ans = equation_B1(T1, TR, alphas, 1)
     den = np.sum(np.power(ans,2))
     num = np.sum(y_obs*ans)
