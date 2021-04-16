@@ -32,8 +32,8 @@ from scipy import ndimage, misc
 
 spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 
-data =[ '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-21/position_12_5_noscale.nii',
-      '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-21/angle_12_25mM_40pix_noscale.nii']  
+data =[ '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-10/phantom_1/phantom_mid122.nii',
+      '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Phantom/2021-02-10/phantom_1/phantom_md103.nii']  
 
 
 init = INITIALIZATION_B1
@@ -95,6 +95,8 @@ nib.save(img, os.path.join(init['output_dir'][sub],'B1_map_reception_inversion.n
 img = nib.Nifti1Image(np.squeeze(corrected[0,:,:,:]/concentration[0])*mask, np.eye(4))
 nib.save(img, os.path.join(init['output_dir'][sub],'corrected_25mM_transmission_only.nii'))
 
+img = nib.Nifti1Image(np.squeeze(corrected[1,:,:,:]/concentration[1])*mask, np.eye(4))
+nib.save(img, os.path.join(init['output_dir'][sub],'corrected_50mM_transmission_only.nii'))
 
 
 mask_erode = ndimage.binary_erosion(mask, structure=np.ones((4,4,4)))

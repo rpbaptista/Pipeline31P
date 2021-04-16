@@ -27,6 +27,9 @@ def yFromSFdata(SFdata):
 def get_sequence_alpha(alpha):
     return np.array([alpha, 2*alpha]).flatten()
 """
+
+
+
 def allNameStr(path, name='sub-'):
 
     start = path.find(name) + len(name)
@@ -217,7 +220,29 @@ def imageToMNI(init, sub, data):
 
     return map_r_final, map_mask_final
 
-    
+def T1mapFromYvalues(y_values, init):
+    N_obs = len(y_values[:,0])
+    results = np.zeros((N_obs,3))
+    err = np.zeros((N_obs,3))
+
+    for i in range(len(y_values[:,0])):
+        x_values =[init['TR']]+init['TI_nominal']
+        try:
+          #  xdata =np.vstack((x_values,x_values)) 
+          #  y_data = y_values[i,:]/np.max(y_values[i,:]) 
+            pop, pcov = curve_fit(function_T1_double,
+                                    x_values,
+                                    y_values[i,:] ,absolute_sigma=True )
+        #    print("parameters, pcov", pop, pcov)
+        except RuntimeError:
+            results[i,:] = -1  
+            err[i,:] = -1 
+            pass
+    #   print(y_values[i,:],results[i])
+        results[i,:]= pop #
+        err[i,:]  = np.sqrt(np.diag(pcov))
+    return results, err
+  
 def B1mapFromYvalues(y_values,init):
     results = np.zeros(y_values[:,0].shape)
     err = np.zeros(y_values[:,0].shape)
@@ -241,14 +266,41 @@ def B1mapFromYvalues(y_values,init):
     return results, err
 
 def yFromSFdata(SFdata):
-    y_values_alpha_1 = SFdata[0,:,:,:].reshape((-1,1))
-    y_values_alpha_2 = SFdata[1,:,:,:].reshape((-1,1))
-    y_values_alpha_3 = SFdata[2,:,:,:].reshape((-1,1))
-    y_values_alpha_4 = SFdata[3,:,:,:].reshape((-1,1))
-    return np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3,y_values_alpha_4))
+   #TODO: GENERALIZE THIS FUNCTION 
+    if len(SFdata.shape)==4:
+        y_values_alpha_1 = SFdata[0,:,:,:].reshape((-1,1))
+        y_values_alpha_2 = SFdata[1,:,:,:].reshape((-1,1))
+        y_values_alpha_3 = SFdata[2,:,:,:].reshape((-1,1))
+     #   y_values_alpha_4 = SFdata[3,:,:,:].reshape((-1,1))
+      #  output = np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3,y_values_alpha_4))
+        output = np.hstack((y_values_alpha_1 ,y_values_alpha_2,y_values_alpha_3))
+    else:
+        y_values_alpha_1 = SFdata[0,:,:].reshape((-1,1))
+        y_values_alpha_2 = SFdata[1,:,:].reshape((-1,1))
+        y_values_alpha_3 = SFdata[2,:,:].reshape((-1,1))
+        y_values_alpha_4 = SFdata[3,:,:].reshape((-1,1))
+        y_values_alpha_5 = SFdata[4,:,:].reshape((-1,1))
+        y_values_alpha_6 = SFdata[5,:,:].reshape((-1,1))
+        y_values_alpha_7 = SFdata[6,:,:].reshape((-1,1))
+        output = np.hstack((y_values_alpha_1,
+                            y_values_alpha_2,
+                            y_values_alpha_3,
+                            y_values_alpha_4,
+                            y_values_alpha_5,
+                            y_values_alpha_6,
+                            y_values_alpha_7,
+                            ))
+    return output
 
 def get_sequence_alpha(alpha):
-    return np.array([alpha, 2*alpha, 3*alpha, 4*alpha]).flatten()
+    
+    return np.array([alpha, 2*alpha, 3*alpha]).flatten()
+
+def function_T1_double(x_values, T1, theta, A):
+    TR = x_values[0]
+    TI = x_values[1:8] 
+ 
+    return equation_T1(T1,TR,TI,theta, A) 
 
 def function_B1_double(x_values, alpha):
     T1 = x_values[0]
@@ -270,6 +322,12 @@ def function_B1(x_values, S0, alpha):
     ans = equation_B1(T1, TR, alpha,  S0)
     
     return ans
+
+def equation_T1(T_one, TR, T_inv, theta, S0=1):
+    cos_theta = np.cos(theta)
+    S_T1 = 1-(1-cos_theta)*np.exp(-T_inv/T_one)
+    S_T1 = 1-(2)*np.exp(-T_inv/T_one)
+    return S_T1
 
 def equation_B1(T1, TR, alpha_1, S0=1):
     """

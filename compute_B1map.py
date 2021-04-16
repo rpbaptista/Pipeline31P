@@ -27,7 +27,7 @@ from utils import openArrayImages, interpolateImage, prepareHeaderOS, getSSIM
 spm.SPMCommand.set_mlab_paths(paths=os.environ['SPM_PATH'])
 from sklearn.metrics import plot_confusion_matrix
 
-data = INITIALIZATION_B1['b1_database_phantom'] 
+data = INITIALIZATION_B1['b1_database_phantom_1H'] 
 init = INITIALIZATION_B1
 
 # Simulating data
@@ -78,11 +78,12 @@ for sub in keys_sub:
     patch_distance = init['par_postproce']['patch_distance'] 
     degres_poly = init['par_postproce']['deg_poly'] 
 
-    sigma_est = np.mean(estimate_sigma(SFdata[0,:,:,0], multichannel=False))
-    patch_kw = dict(patch_size=patch_size,      # 5x5 patches
-                patch_distance=patch_distance)
+   
     
     if DENOISE == True:
+        sigma_est = np.mean(estimate_sigma(SFdata[0,:,:,0], multichannel=False))
+        patch_kw = dict(patch_size=patch_size,      # 5x5 patches
+                patch_distance=patch_distance)
         y_values_denoised = yFromSFdata(SFdata_denoised)
         y_values = y_values_denoised# .copy()
    
@@ -91,11 +92,12 @@ for sub in keys_sub:
     filter_filename =  getFilenameFilter(init,shape[0])
     
     # fast algorithm, sigma provided
-    for i in range(shape[0]):
-        SFdata_denoised[i,:,:,:]  = denoise_nl_means(SFdata[i,:,:,:], h=0.6 * sigma_est, sigma=sigma_est,
-                                    fast_mode=True, **patch_kw)  
-        img = nib.Nifti1Image(np.squeeze(SFdata_denoised[i,:,:,:]),  None, header=header_os)
-        nib.save(img,os.path.join(init['output_dir'][sub],filter_filename[i] ))
+    if DENOISE == True:
+        for i in range(shape[0]):
+            SFdata_denoised[i,:,:,:]  = denoise_nl_means(SFdata[i,:,:,:], h=0.6 * sigma_est, sigma=sigma_est,
+                                        fast_mode=True, **patch_kw)  
+            img = nib.Nifti1Image(np.squeeze(SFdata_denoised[i,:,:,:]),  None, header=header_os)
+            nib.save(img,os.path.join(init['output_dir'][sub],filter_filename[i] ))
     
 
 
@@ -117,7 +119,7 @@ for sub in keys_sub:
         mask = mask/mask.max()
         img = nib.Nifti1Image(imageFitPolyN(np.squeeze(array),degres_poly,init['output_dir'][sub],mask  ),  None, header=header_os)
         nib.save(img, os.path.join(init['output_dir'][sub],filename_fit_output))
-        
+            
 
 print("Compute average map")
 path_maps = [] 
