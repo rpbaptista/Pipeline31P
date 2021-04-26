@@ -37,7 +37,7 @@ from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
 from metrics import statisticsImage
 from utils_own.argsPipeline import argPipeline
-from utils_own.quantification import getCoefficient,getCoefficient_T1_T2, meanMask, getKf, getKab, getTheoricalValues
+from utils_own.quantification import getCoefficient, meanMask, getKf, getKab, getTheoricalValues, computeAlphas
 from utils_own.model import getW1fromFAandTau
 from utils_own.bloch_equations import getMagMat, mag_signal_N
 from utils_own.b1_mapping import computeCorrectionFactor
@@ -232,11 +232,12 @@ def run_pipeline(sub,roi_id,args):
                                                         INITIALIZATION['b1']['FA_nominal'],
                                                         calib['TR'] ,
                                                         calib['Pbs']['T1'] )
+            nib.save( nib.Nifti1Image(correction_factor, np.eye(4)), os.path.join(sub_par['output_dir'],'corrected_field.nii'))           
             for i in range(img_cATP.shape[0]):
                 vols_corrected_cATP[i,:,:,:] = vols_cATP[i,:,:,:] * correction_factor
                 vols_corrected_PCr[i,:,:,:]  = vols_PCr[i,:,:,:] * correction_factor
-                stats_pcr.append(statisticsImage(vols_corrected_cATP[i,:,:,:], mask_volunteer_vols))
-                stats_catp.append(statisticsImage(vols_corrected_PCr[i,:,:,:], mask_volunteer_vols))
+                stats_catp.append(statisticsImage(vols_corrected_cATP[i,:,:,:], mask_volunteer_vols))
+                stats_pcr.append(statisticsImage(vols_corrected_PCr[i,:,:,:], mask_volunteer_vols))
         else:
             for i in range(img_cATP.shape[0]):
                 stats_pcr.append(statisticsImage(vols_PCr[i,:,:,:], mask_volunteer_vols))
@@ -265,27 +266,16 @@ def run_pipeline(sub,roi_id,args):
 
         print("-- Computing model")
         # Open images
-        phantom = np.squeeze(openArrayImages([calib['phantom_path']]))
-        mask = np.squeeze(openArrayImages([calib['mask_path']]))
+        phantom = np.squeeze(openArrayImages(calib['phantom_path']))
+        mask = np.squeeze(openArrayImages(calib['mask_path']))
 
         # slice
-        phantom = phantom[:,:,calib['slice'][0]:calib['slice'][1]].T
         noise  = np.squeeze(openArrayImages([calib['noise_acq']]))
-        noise_mean = np.mean(noise)# - np.min(noise)
+        noise_mean = np.mean(noise)
         
         #Compute model
-        signal_m = meanMask(phantom, mask)
-        print(signal_m, noise_mean)
-      #  signal_m = signal_m - noise_mean
-        alpha_cATP = getCoefficient_T1_T2(signal = signal_m, 
-                                calib = calib,
-                                in_met = 'Pbs',
-                                out_met= 'cATP')
-        alpha_PCr = getCoefficient_T1_T2(signal = signal_m, 
-                                calib = calib,
-                                in_met = 'Pbs',
-                                out_met= 'PCr')
-        
+        alpha_PCr,alpha_cATP, reg = computeAlphas(phantom, mask, noise, calib)
+        print(reg.coef_, reg.intercept_)
         # read data
         if args.applyB1Correction == 1:
             listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'PCr')
@@ -300,11 +290,11 @@ def run_pipeline(sub,roi_id,args):
         # Apply model
         print("-- Applying model")
         FA_sub = np.asarray(sub_par['FA'])
-        FA_sub[1:len(sub_par['FA'])] = FA_sub[1:len(sub_par['FA'])]*calib['FA']/calib['FA_theorical'] # - 10
+        FA_sub[1:len(sub_par['FA'])] = FA_sub[1:len(sub_par['FA'])]*calib['FA']/calib['FA_theorical'] 
         print(FA_sub)
-        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
-   #     concentrations = pd.concat([pd.DataFrame(sub_par['FA']), (listStatistics_cAtp['mean_metabolite']-noise_mean)/alpha_cATP, 
-   #                                                              (listStatistics_PCr['mean_metabolite']-noise_mean)/alpha_PCr], axis=1)
+     #   concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
+        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), (listStatistics_cAtp['mean_metabolite']-reg.intercept_)/alpha_cATP, 
+                                                                 (listStatistics_PCr['mean_metabolite']-reg.intercept_)/alpha_PCr], axis=1)
         concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
         print(concentrations)
 

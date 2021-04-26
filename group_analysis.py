@@ -59,19 +59,21 @@ def run_group(group_sub,roi_id, applyB1Correction):
         sub_par,calib = portability(sub_par,calib, group)
     
         # read data
-        if aapplyB1Correction == 1:
+        if applyB1Correction == 1:
             concentrations = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id+'b1_corrected', 'concentrations')
+            kinetic = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id+'b1_corrected', 'kinetic')
+            flux = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id+'b1_corrected', 'flux_ck')
         else:
             concentrations = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'concentrations')
-            
+            kinetic = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'kinetic')
+            flux = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'flux_ck')
+
         concentrations_group[0,i] =concentrations['PCr concentration [mM]'][0]
         concentrations_group[1,i] =concentrations['cATP concentration [mM]'][0]
         
-        kinetic = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'kinetic')
-        kinetic_group[i] = kinetic[0][0]
-        flux = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'flux_ck')
+       
         flux_group[i] = flux[0][0]
-        
+        kinetic_group[i] = kinetic[0][0]   
     all_list = np.asarray([concentrations_group,kinetic_group,flux_group ])
     df1 = pd.DataFrame(all_list)
     

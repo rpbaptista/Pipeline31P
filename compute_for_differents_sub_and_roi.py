@@ -17,6 +17,8 @@ rois = ['cortical_up','cortical_down', 'cortical_in']
 #rois = ['wm', 'gm'] 
 #rois = ['occ_pole']
 only_group = False
+applyB1Correction = 0
+
 
 if only_group == False:
     for sub in subs:
@@ -24,7 +26,7 @@ if only_group == False:
                         align31P=0,
                         createROI=0,
                         createIndividualB1=0,
-                        applyB1Correction = 1,
+                        applyB1Correction = applyB1Correction,
                         computeStatistics=1,
                         quantification=1, 
                         BET = True) 
@@ -39,4 +41,4 @@ if only_group == False:
 
 # Group analisis
 for roi in rois:
-    run_group(subs,roi, args.applyB1Correction)
+    run_group(subs,roi, applyB1Correction)

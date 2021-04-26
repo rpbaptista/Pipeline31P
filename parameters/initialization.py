@@ -158,11 +158,18 @@ INITIALIZATION['sub03_o'] = {
 
 INITIALIZATION['calibration'] ={
  #   'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/Mask_new_shim_2.tif',
-    'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/Mask-new_shim.tif',
-    'phantom_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/meas_MID65_31P_MT_cATP_FA0_PCr_TPI_P3600_RES12_TR250_TE5_FID9651_filter_hamming2_freq_0_echo_0.nii',
+  #  'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/Mask-new_shim.tif',
+    'mask_path' :[ '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_all_phantom_md103_50mM_small.nii',
+    '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_all_phantom_md103_50mM_small.nii'], 
+    'phantom_path' :[ '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/phantom_md103_50mM.nii'
+                        ,'/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/phantom_mid122_25mM.nii'
+                        ] ,
     'noise_acq' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/voltage-zero-pcr.nii', 
-    'true_value' : 50, #mM
-    'slice' : [12,14],
+    'true_value' :[
+        50
+       ,25 
+      ] , #mM
+    'slice' : [9,10],
     # T1,  T2 in vivo 31p magnetici (T1 aqui é apparent)
     # T2e measured by us
     'PCr' :  {'T1': 3.37,
@@ -222,7 +229,8 @@ INITIALIZATION['roi'] = {
 
 INITIALIZATION['b1'] ={
     'path' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/result_carte_b1_sub-_all_fit_pol8_PA_divide_255.nii',
-    'FA_nominal' : 12
+    'FA_nominal' : 12,
+    'path_phantom' : '',
 } 
 
 INITIALIZATION['group'] ={

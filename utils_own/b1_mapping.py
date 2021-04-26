@@ -26,21 +26,18 @@ def computeCorrectionFactor(b1_map,FA_nominal, TR, T1):
         Returns correction factor to B1 
         input = FA_nominal in degrees
     """
+    import time
+    import scipy.ndimage as sp_image
+  
     M0 = 1
     b1_map = np.squeeze(b1_map)
-    b1_shape = b1_map.shape
-    
-    correction_factor_map = np.zeros(b1_shape)
-    for i in range (b1_shape[0]):
-        for j in range(b1_shape[1]):
-            for k in range(b1_shape[2]):
-                carte_b1 = b1_map[i,j,k]
-                aux = signal_equation(TR, M0,  carte_b1 , T1)/signal_equation(TR, 1,  FA_nominal , T1)
+    mask = np.abs(b1_map)<FA_nominal*0.10
+    mask = sp_image.binary_erosion(mask, structure=np.ones((1,1,1))).astype(mask.dtype)
+    SI_nominal = signal_equation(TR, 1,  FA_nominal , T1)
+    correction_factor_map = SI_nominal/signal_equation(TR, M0,  b1_map, T1)
+    np.place(correction_factor_map, mask, 0)
 
-                if np.abs(aux) < 1e-4:
-                    correction_factor_map[i,j,k] = -1
-                else:
-                    correction_factor_map[i,j,k] = 1/aux
+
     return correction_factor_map
 
 

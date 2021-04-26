@@ -8,6 +8,31 @@ from utils_own.model import *
 from utils_own.bloch_equations import * 
 from scipy.optimize import curve_fit
 
+
+def computeAlphas(phantom, mask, noise, calib):
+    from sklearn.linear_model import LinearRegression
+
+    phantom = phantom[:,:,:,calib['slice'][0]:calib['slice'][1]]
+    if len(mask.shape)==4:
+        mask = mask[:,:,:,calib['slice'][0]:calib['slice'][1]]
+    else:
+        mask = mask
+    
+    signal_m = meanMask(phantom, mask) - np.mean(noise)
+
+    LR =  LinearRegression(fit_intercept=True)
+    reg = LR.fit(np.asarray(calib['true_value']).reshape(-1,1), np.asarray(signal_m))
+
+    alpha_cATP = getCoefficient_T1_T2(signal = reg.coef_[0]* np.abs(np.diff(calib['true_value'])) , 
+                            calib = calib,
+                            in_met = 'Pbs',
+                            out_met= 'cATP')
+    alpha_PCr = getCoefficient_T1_T2(signal = reg.coef_[0]*np.abs(np.diff(calib['true_value'])) , 
+                            calib = calib,
+                            in_met = 'Pbs',
+                            out_met= 'PCr')
+    return alpha_PCr,alpha_cATP, reg
+
 def getMSE(a,b):
     return np.sqrt(np.sum((a - b)**2))
 
@@ -55,11 +80,14 @@ def getMs(t, Mc, T1, Kf):
     return Mt[-1]
 
 def meanMask(image, mask):
+    import numpy.ma as ma
     mask = mask/np.max(mask)
-    mask = np.broadcast_to(mask, image.shape)
-    array = image*mask
-    array = array[array!=0]
-    return  np.mean(array)
+
+    if image.shape != mask.shape:
+        mask = np.broadcast_to(mask, image.shape)
+    masked = ma.masked_where(mask>0,image)
+
+    return  masked.mean(axis=(1,2,3))
 
 def getCoefficient (signal, calib, in_met, out_met):
     """
@@ -68,7 +96,11 @@ def getCoefficient (signal, calib, in_met, out_met):
     S = M0 * pondT1T2
     """
     print("... warning: only considering T1")
-    signal_under_concentration = signal/calib['true_value']
+    if len(calib['true_value']) > 1:
+        concentration = np.abs(np.diff(calib['true_value']))
+    else:
+        concentration = calib['true_value']
+    signal_under_concentration = signal/concentration
     K0 = getM0fromSignal(signal= signal_under_concentration,
                         alpha_deg  = calib['FA'],
                         T1 = calib[in_met]['T1'],
@@ -88,7 +120,11 @@ def getCoefficient_T1_T2 (signal, calib, in_met, out_met):
     """
 
     print("... warning: considering T1 and T2")
-    signal_under_concentration = signal/calib['true_value']
+    if len(calib['true_value']) > 1:
+        concentration = np.abs(np.diff(calib['true_value']))
+    else:
+        concentration = calib['true_value']
+    signal_under_concentration = signal/concentration
     M0_under_concentration = getM0fromSignal_T1_T2(signal= signal_under_concentration,
                         alpha_deg  = calib['FA'],
                         T1 = calib[in_met]['T1'],
