@@ -19,9 +19,11 @@ def computeAlphas(phantom, mask, noise, calib):
         mask = mask
     
     signal_m = meanMask(phantom, mask) - np.mean(noise)
-
-    LR =  LinearRegression(fit_intercept=True)
-    reg = LR.fit(np.asarray(calib['true_value']).reshape(-1,1), np.asarray(signal_m))
+    
+    X = np.asarray(calib['true_value']).reshape(-1,1)
+    y = np.asarray(signal_m)
+    
+    reg = LinearRegression(fit_intercept=True).fit(X, np.asarray(signal_m))
 
     alpha_cATP = getCoefficient_T1_T2(signal = reg.coef_[0]* np.abs(np.diff(calib['true_value'])) , 
                             calib = calib,

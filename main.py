@@ -49,7 +49,6 @@ from utils_own.b1_mapping import computeCorrectionFactor
 import sys
 
 def run_pipeline(sub,roi_id,args):
-  
 
     sub_par = INITIALIZATION[sub]
     calib = INITIALIZATION['calibration']
@@ -123,8 +122,7 @@ def run_pipeline(sub,roi_id,args):
         apply_transf_imgs([anat_31P_path], os.path.join(sub_par['output_dir'],'inverse_anat1H_anat31P.mat') , [realign_31P_anat_path])
 
         print("--Reslice anat 1H into MNI")
-        reslice(resliced_1H_MNI, realign_31P_anat_path)
-           
+        reslice(resliced_1H_MNI, realign_31P_anat_path)           
     else:
         print("-Skipped aligned with anat.")
 
@@ -143,7 +141,7 @@ def run_pipeline(sub,roi_id,args):
   
         print("--Saved filter images...")
         saveArrayNifti(img_filter_PCr,output_filter_path_PCr, header_PCr)
-        saveArrayNifti(img_filter_cATP,output_filter_path_cATP, header_cATP)
+        saveArrayNifti(img_filter_cATP, output_filter_path_cATP, header_cATP)
         
         print("--Align 31P with 31P using PCR (more signal)...")
         calc_coreg_imgs(output_filter_path_PCr[0], output_original_path_PCr, os.path.join(sub_par['output_dir'],'31P_31P_Pcr.mat'))
@@ -168,11 +166,8 @@ def run_pipeline(sub,roi_id,args):
 
        # reslice(resliced_31P_into_MNI_1H, r_final_realign_path_cATP)
        # reslice(resliced_31P_into_MNI_1H, r_final_realign_path_PCr)
-
     else:
         print("-Skipped Aligned 31P to 31P-1H-MNI.")
-
-
 
     if (args.createROI == 1):
         print("-Create individual ROI")
@@ -195,7 +190,6 @@ def run_pipeline(sub,roi_id,args):
         apply_warp(mask_mni, INITIALIZATION['template']['mni_brain'], warp_file.replace('.nii', '_inverse.nii'), out_file=mask_volunteer, forceNii=True)
         apply_warp(resliced_1H_MNI_brain, INITIALIZATION['template']['mni_brain'], warp_file, prefix='warp')
         apply_warp(add_prefix(resliced_1H_MNI_brain,'warp'), INITIALIZATION['template']['mni_brain'], warp_file, prefix='unwarp')
-
     else:
         print("-Skipped create ROI MNI.")
     
@@ -206,7 +200,6 @@ def run_pipeline(sub,roi_id,args):
         apply_warp(b1_mni, INITIALIZATION['template']['mni_brain'], warp_file.replace('.nii', '_inverse.nii'), out_file=b1_volunteer, forceNii=True)
         apply_warp(resliced_1H_MNI_brain, INITIALIZATION['template']['mni_brain'], warp_file, prefix='warp')
         apply_warp(add_prefix(resliced_1H_MNI_brain,'warp'), INITIALIZATION['template']['mni_brain'], warp_file, prefix='unwarp')
-
     else:
         print("-Skipped individual B1 MNI.")
 
@@ -293,8 +286,8 @@ def run_pipeline(sub,roi_id,args):
         FA_sub[1:len(sub_par['FA'])] = FA_sub[1:len(sub_par['FA'])]*calib['FA']/calib['FA_theorical'] 
         print(FA_sub)
      #   concentrations = pd.concat([pd.DataFrame(sub_par['FA']), listStatistics_cAtp['mean_metabolite']/alpha_cATP, listStatistics_PCr['mean_metabolite']/alpha_PCr], axis=1)
-        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), (listStatistics_cAtp['mean_metabolite']-reg.intercept_)/alpha_cATP, 
-                                                                 (listStatistics_PCr['mean_metabolite']-reg.intercept_)/alpha_PCr], axis=1)
+        concentrations = pd.concat([pd.DataFrame(sub_par['FA']), (listStatistics_cAtp['mean_metabolite']-noise_mean)/alpha_cATP, 
+                                                                 (listStatistics_PCr['mean_metabolite']-noise_mean)/alpha_PCr], axis=1)
         concentrations.columns = ['FA °','cATP concentration [mM]', 'PCr concentration [mM]']
         print(concentrations)
 
@@ -342,8 +335,55 @@ def run_pipeline(sub,roi_id,args):
     else:
         print("-Skipped quantification")
 
+
+
     print("--Success--")
 
+
+def run_saveResults(sub, rois, args):
+    sub_par = INITIALIZATION[sub]
+    calib = INITIALIZATION['calibration']
+    group = INITIALIZATION['group']
+    template = INITIALIZATION['template']['mni'] 
+
+    flux_volunteer_pcr = createPath( 'flux_volunteer_PCR.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+    flux_volunteer_catp = createPath( 'flux_volunteer_cATP.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+
+    aux = createPath( 'mask_volunteer'+rois[0] +'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+    aux_vols = np.squeeze(openArrayImages(aux))
+
+    img = nib.load(template)
+    hdr = img.header
+
+    final_image_PCr = np.zeros(aux_vols.shape)     
+    final_image_cATP = np.zeros(aux_vols.shape)     
+
+    if (args.saveResults == 1):
+        print("-saveResults")
+        for roi_id in rois:
+            roi = INITIALIZATION['roi'][roi_id]
+            mask_volunteer = createPath( 'mask_volunteer'+roi_id+'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+
+            if args.applyB1Correction == 1:
+                flux_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'flux_ck')
+                flux_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'flux_ck')
+            else:
+                flux_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'flux_ck')
+                flux_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'flux_ck')
+        
+            mask_volunteer_vols = np.squeeze(openArrayImages(mask_volunteer))
+            mask_volunteer_vols[mask_volunteer_vols>0.5] = 1
+            mask_volunteer_vols[mask_volunteer_vols<=0.5] = 0
+
+            final_image_PCr = final_image_PCr + mask_volunteer_vols*flux_PCr[0][0]  
+            final_image_cATP = final_image_cATP + mask_volunteer_vols*flux_cAtp[0][0]  
+
+            
+        nib.save( nib.Nifti1Image(final_image_PCr, None, hdr), flux_volunteer_pcr)           
+        nib.save( nib.Nifti1Image(final_image_cATP, None, hdr), flux_volunteer_catp)           
+
+    else:
+        print("-Skipped saveResults")
 
 if __name__ == '__main__':
 # Treat arguments
@@ -393,7 +433,10 @@ if __name__ == '__main__':
                         help="0/1 to do four step analysis",
                         type=int,
                         default = 1)
-
+    parser.add_argument("--saveResults",
+                        help="0/1 to do saveResults",
+                        type=int,
+                        default = 1)
 
     parser.add_argument("--BET",
                         help="0/1 to do four step analysis",

@@ -159,8 +159,8 @@ INITIALIZATION['sub03_o'] = {
 INITIALIZATION['calibration'] ={
  #   'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/Mask_new_shim_2.tif',
   #  'mask_path' : '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/Mask-new_shim.tif',
-    'mask_path' :[ '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_all_phantom_md103_50mM_small.nii',
-    '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_all_phantom_md103_50mM_small.nii'], 
+    'mask_path' :[ '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_all_phantom_md103_50mM.nii',
+    '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/mask_all_phantom_md103_50mM.nii'], 
     'phantom_path' :[ '/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/phantom_md103_50mM.nii'
                         ,'/neurospin/ciclops/people/Renata/ReconstructedData/Calibration_31P/phantom_mid122_25mM.nii'
                         ] ,
@@ -223,6 +223,14 @@ INITIALIZATION['roi'] = {
     'cortical_in' : [
                  #(maybe not)
                 24,28,29,30,31,32,36],
+
+    'cortical_up_1' : [1,5,6,9,11,41],
+    'cortical_up_2' : [2,4,7,8,42],
+    'cortical_down_1' : [
+                10,12,13,19,20,21,22,23,45,46,48],
+    'cortical_down_2' : [
+                15,16,17,43,14],
+                            
     'wm' :  '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_wm.nii',
     'gm' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_gm.nii'        
 }
