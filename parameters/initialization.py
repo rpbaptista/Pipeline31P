@@ -232,8 +232,13 @@ INITIALIZATION['roi'] = {
                 15,16,17,43,14],
                             
     'wm' :  '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_wm.nii',
-    'gm' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_gm.nii'        
+    'gm' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_gm.nii'     ,   
+    'base_roi' : [ 'cortical_up', 'cortical_down', 'cortical_in'],   
+    'fine_roi': [ 'cortical_up_1', 'cortical_up_2', 'cortical_down_1', 'cortical_down_2'],   
+    
 }
+
+
 
 INITIALIZATION['b1'] ={
     'path' : '/neurospin/ciclops/people/Renata/ProcessedData/B1Map/31P_Volunteer/result_carte_b1_sub-_all_fit_pol8_PA_divide_255.nii',

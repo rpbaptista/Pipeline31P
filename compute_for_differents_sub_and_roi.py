@@ -31,7 +31,7 @@ if only_group == False:
                         createIndividualB1=0,
                         applyB1Correction = applyB1Correction,
                         computeStatistics=0,
-                        quantification=0,
+                        quantification=1,
                         saveResults=1, 
                         BET = True) 
         firstRun = True

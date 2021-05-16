@@ -37,7 +37,7 @@ from parameters.initialization import INITIALIZATION
 from utils_own.utils import *
 from metrics import statisticsImage
 from utils_own.argsPipeline import argPipeline
-from utils_own.quantification import getCoefficient, meanMask, getKf, getKab, getTheoricalValues, computeAlphas
+from utils_own.quantification import getCoefficient, meanMask, getKf, getKab, getTheoricalValues, computeAlphas, getRangeK
 from utils_own.model import getW1fromFAandTau
 from utils_own.bloch_equations import getMagMat, mag_signal_N
 from utils_own.b1_mapping import computeCorrectionFactor
@@ -52,7 +52,8 @@ def run_pipeline(sub,roi_id,args):
 
     sub_par = INITIALIZATION[sub]
     calib = INITIALIZATION['calibration']
-    roi = INITIALIZATION['roi'][roi_id]
+    all_roi = INITIALIZATION['roi']
+    roi = all_roi[roi_id]
     group = INITIALIZATION['group']
 
     print("******************************** 31P MT pipeline  - v1.0************************")
@@ -297,7 +298,8 @@ def run_pipeline(sub,roi_id,args):
             appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
        
         print("-- Kinetic constant")
-        rangeK = np.arange(0.1,0.5,0.01)
+        rangeK = getRangeK(roi,all_roi)
+        
         ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
         Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_norm_wo_n'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_norm_wo_n'])
       #  Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_normalized'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_normalized'])
