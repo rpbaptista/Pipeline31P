@@ -14,8 +14,12 @@ subs = ['sub01_y','sub02_y','sub03_y']#
 #subs = ['sub01_o']
 #subs = [ 'sub00_y']#
 #rois = ['cortical_up','cortical_down', 'cortical_in']
-rois = ['cortical_up_1','cortical_up_2',
-        'cortical_down_1', 'cortical_down_2']
+rois = [
+      'cortical_frontal_anterior_cingulare',
+      'cortical_frontal_gyrus_opercular', 
+       'cortical_temporal_supramarginal_angular',
+        'cortical_occipital',
+         'cortical_cingurale_posterior_precuneus']
 
 #rois = ['wm', 'gm'] 
 #rois = ['occ_pole']
@@ -31,7 +35,7 @@ if only_group == False:
                         createIndividualB1=0,
                         applyB1Correction = applyB1Correction,
                         computeStatistics=0,
-                        quantification=1,
+                        quantification=0,
                         saveResults=1, 
                         BET = True) 
         firstRun = True
@@ -43,7 +47,7 @@ if only_group == False:
                 args.alignAnat = 0
                 args.align31P = 0
 
-run_saveResults(sub, rois, args)
+        run_saveResults(sub, rois, args)
 
 # Group analisis
 for roi in rois:

@@ -145,11 +145,15 @@ def imageFitPolyN(image,degree, output_dir, mask = None):
   
     return imageFitted
 
-def imageToMNI(init, sub, data):
+def imageToMNI(init, sub, data, path=None):
     template = init['template']['mni'] 
     template_mask = init['template']['mni_mask'] 
     anat = init['anat'][sub]
-    images = data[sub].copy()
+
+    if path is None:
+        images = data[sub].copy()
+    else:
+        images = path
     output_dir = init['output_dir'][sub]
     DENOISE = init['par_postproce']['DENOISE'] 
     os_factor = init['par_postproce']['os_factor'] 

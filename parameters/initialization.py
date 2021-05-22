@@ -219,7 +219,8 @@ INITIALIZATION['roi'] = {
     'cortical_down' : [
                 15,16,17,43,14, #(maybe not)
                 10,12,13,19,20,21,22,23,45,46,48],
-    'cortical_occ_pole'    : [48],         
+    'cortical_occ_pole'    : [48],  
+
     'cortical_in' : [
                  #(maybe not)
                 24,28,29,30,31,32,36],
@@ -230,10 +231,23 @@ INITIALIZATION['roi'] = {
                 10,12,13,19,20,21,22,23,45,46,48],
     'cortical_down_2' : [
                 15,16,17,43,14],
+
+    'cortical_frontal_anterior_cingulare' : [1,3,26,28,29],
+    'cortical_frontal_gyrus_opercular' : [2,4,5,6,7,41,42,43,45,46],
+    'cortical_temporal_supramarginal_angular' : [9,10,12,13,16,17,18,19,20,21],
+    'cortical_occipital' : [22,23,40,48]   ,
+    'cortical_cingurale_posterior_precuneus' : [24,30,31,32,36,47],  
                             
     'wm' :  '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_wm.nii',
     'gm' : '/neurospin/ciclops/people/Renata/ProcessedData/Atlases/MNI152_T1_2mm_brain_gm.nii'     ,   
-    'base_roi' : [ 'cortical_up', 'cortical_down', 'cortical_in'],   
+    'base_roi' : [ 'cortical_up',
+     'cortical_down',
+      'cortical_in', 
+      'cortical_frontal_anterior_cingulare',
+      'cortical_frontal_gyrus_opercular', 
+       'cortical_temporal_supramarginal_angular',
+        'cortical_occipital',
+         'cortical_cingurale_posterior_precuneus'],   
     'fine_roi': [ 'cortical_up_1', 'cortical_up_2', 'cortical_down_1', 'cortical_down_2'],   
     
 }

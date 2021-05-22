@@ -269,7 +269,7 @@ def run_pipeline(sub,roi_id,args):
         
         #Compute model
         alpha_PCr,alpha_cATP, reg = computeAlphas(phantom, mask, noise, calib)
-        print(reg.coef_, reg.intercept_)
+
         # read data
         if args.applyB1Correction == 1:
             listStatistics_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'PCr')
@@ -298,7 +298,7 @@ def run_pipeline(sub,roi_id,args):
             appendExcel(concentrations, 'concentrations', sub_par['output_dir'], sufix=sub+'_'+roi_id)
        
         print("-- Kinetic constant")
-        rangeK = getRangeK(roi,all_roi)
+        rangeK = getRangeK(roi_id,all_roi,sub, sub_par['output_dir'],args.applyB1Correction )
         
         ratio = concentrations['PCr concentration [mM]'][0]/concentrations['cATP concentration [mM]'][0]
         Kpcr_catp = getKab(rangeK,ratio, listStatistics_PCr['mean_norm_wo_n'], FA_sub, calib, 'PCr', 'cATP', listStatistics_cAtp['mean_norm_wo_n'])
@@ -350,6 +350,9 @@ def run_saveResults(sub, rois, args):
 
     flux_volunteer_pcr = createPath( 'flux_volunteer_PCR.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     flux_volunteer_catp = createPath( 'flux_volunteer_cATP.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+    quant_volunteer_catp = createPath( 'quant_volunteer_cATP.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+    quant_volunteer_pcr = createPath( 'quant_volunteer_PCR.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+    kinetic_volunteer_pcr = createPath( 'kin_volunteer.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
 
     aux = createPath( 'mask_volunteer'+rois[0] +'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     aux_vols = np.squeeze(openArrayImages(aux))
@@ -359,6 +362,9 @@ def run_saveResults(sub, rois, args):
 
     final_image_PCr = np.zeros(aux_vols.shape)     
     final_image_cATP = np.zeros(aux_vols.shape)     
+    final_image_quantification_PCr = np.zeros(aux_vols.shape)     
+    final_image_quantification_cATP = np.zeros(aux_vols.shape)     
+    final_image_kinetic = np.zeros(aux_vols.shape)     
 
     if (args.saveResults == 1):
         print("-saveResults")
@@ -369,16 +375,23 @@ def run_saveResults(sub, rois, args):
             if args.applyB1Correction == 1:
                 flux_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'flux_ck')
                 flux_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'flux_ck')
+                quant = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'concentrations')
+                kinetic = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'kinetic')
             else:
                 flux_PCr = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'flux_ck')
                 flux_cAtp = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'flux_ck')
-        
+                quant = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'concentrations')
+                kinetic = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'kinetic')
+                    
             mask_volunteer_vols = np.squeeze(openArrayImages(mask_volunteer))
             mask_volunteer_vols[mask_volunteer_vols>0.5] = 1
             mask_volunteer_vols[mask_volunteer_vols<=0.5] = 0
 
             final_image_PCr = final_image_PCr + mask_volunteer_vols*flux_PCr[0][0]  
-            final_image_cATP = final_image_cATP + mask_volunteer_vols*flux_cAtp[0][0]  
+            final_image_cATP = final_image_cATP + mask_volunteer_vols*flux_cAtp[0][0] 
+            final_image_quantification_cATP= final_image_quantification_cATP + mask_volunteer_vols*quant['cATP concentration [mM]'][0]  
+            final_image_quantification_PCr= final_image_quantification_PCr + mask_volunteer_vols*quant['PCr concentration [mM]'][0] 
+            final_image_kinetic= final_image_kinetic + mask_volunteer_vols*kinetic[0][0]   
 
             
         nib.save( nib.Nifti1Image(final_image_PCr, None, hdr), flux_volunteer_pcr)           

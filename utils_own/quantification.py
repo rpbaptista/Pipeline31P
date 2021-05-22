@@ -2,7 +2,14 @@ import numpy as np
 import math
 import sys, os 
 import matplotlib.pyplot as plt
+from pathlib import Path
+
+
+utils_path = os.path.join(str(Path(sys.path[0]).parents[0]), 'Utils')
 sys.path.append(os.path.join(sys.path[0],'./utils_own/'))
+sys.path.append(utils_path)
+
+from utils import readExcel
 
 from utils_own.model import * 
 from utils_own.bloch_equations import * 
@@ -144,27 +151,27 @@ def getCoefficient_T1_T2 (signal, calib, in_met, out_met):
     return  M0_under_concentration_times_T1_pond
 
 
-def getRangeK(roi, rois, sub):
-    if isBaseROI(roi,rois):
+def getRangeK(roi_id, rois, sub, sub_output_dir,  applyB1Correction):
+    if isBaseROI(roi_id,rois):
         print("----base roi, taking initial k") 
         return np.arange(0.1,0.5,0.01)
     else:
         # adapt to the range closer
         #  
         print("----fine roi, taking initial k") 
-        K = getValueKforROI(roi)
+        K = getValueKforROI(roi_id, sub, sub_output_dir, applyB1Correction)
         return np.arange(K-0.1,K+0.1,0.01)
 
-def getValueKforROI(roi,sub):
-    if args.applyB1Correction == 1:
-        constant_kine = readExcel( sub_par['output_dir'], sub+'_'+roi_id+'b1_corrected', 'kinetic')
+def getValueKforROI(roi_id,sub, sub_output_dir, applyB1Correction):
+    if applyB1Correction == 1:
+        constant_kine = readExcel( sub_output_dir, sub+'_'+roi_id+'b1_corrected', 'kinetic')
     else:
-        constant_kine = readExcel( sub_par['output_dir'], sub+'_'+roi_id, 'kinetic')
-    return 0.25
+        constant_kine = readExcel( sub_output_dir, sub+'_'+roi_id, 'kinetic')
+    return constant_kine[0][0]  
 
-def isBaseROI(roi,rois):
+def isBaseROI(roi_id,rois):
     base_rois = rois['base_roi'] 
-    if roi in base_rois:
+    if roi_id in base_rois:
         return True
     else :
         return False

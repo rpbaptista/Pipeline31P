@@ -1,5 +1,10 @@
+import numpy as np
+import matplotlib.pyplot as plt
 
-"""alpha_0 = np.linspace(0, 45, num=15) # np.array([25,35,45] )
+N_iterations = 100
+import bloch_equations.equation_B1
+
+alpha_0 = np.linspace(0, 45, num=15) # np.array([25,35,45] )
 results_monte_carlo = np.zeros((alpha_0.size,N_iterations))
 for j in range(alpha_0.size):
     S_alpha = equation_B1(init['T1'] ,init['TR'],get_sequence_alpha(alpha_0[j] ) , S0)
@@ -26,7 +31,7 @@ plt.plot(alpha_0, np.mean(results_monte_carlo,axis=1)-np.std(results_monte_carlo
 plt.legend()
 #plt.plot(get_sequence_alpha(alpha_0), results_monte_carlo)
 plt.show()
-"""
+
 # alpha = np.arange(90)
 # keys_sub = search_keys_sub(init)#
 
