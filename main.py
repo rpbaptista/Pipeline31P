@@ -352,7 +352,7 @@ def run_saveResults(sub, rois, args):
     flux_volunteer_catp = createPath( 'flux_volunteer_cATP.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     quant_volunteer_catp = createPath( 'quant_volunteer_cATP.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     quant_volunteer_pcr = createPath( 'quant_volunteer_PCR.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
-    kinetic_volunteer_pcr = createPath( 'kin_volunteer.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+    kinetic_volunteer = createPath( 'kin_volunteer.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
 
     aux = createPath( 'mask_volunteer'+rois[0] +'.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
     aux_vols = np.squeeze(openArrayImages(aux))
@@ -396,6 +396,9 @@ def run_saveResults(sub, rois, args):
             
         nib.save( nib.Nifti1Image(final_image_PCr, None, hdr), flux_volunteer_pcr)           
         nib.save( nib.Nifti1Image(final_image_cATP, None, hdr), flux_volunteer_catp)           
+        nib.save( nib.Nifti1Image(final_image_quantification_cATP, None, hdr),quant_volunteer_catp )           
+        nib.save( nib.Nifti1Image(final_image_kinetic, None, hdr), quant_volunteer_pcr)           
+        nib.save( nib.Nifti1Image(final_image_kinetic, None, hdr), kinetic_volunteer)           
 
     else:
         print("-Skipped saveResults")

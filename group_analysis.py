@@ -69,7 +69,14 @@ def run_group(group_sub,roi_id, applyB1Correction):
 
 
         flux_volunteer_pcr = createPath( 'flux_volunteer_PCR.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+        quant_volunteer_catp = createPath( 'quant_volunteer_cATP.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+        quant_volunteer_pcr = createPath( 'quant_volunteer_PCR.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+        kinetic_volunteer = createPath( 'kin_volunteer.nii',sub_par['subject_dir'], sub_par['replaceFolder'])
+
         output_flux_volunteer_pcr = add_prefix(flux_volunteer_pcr, 'mni_')
+        output_quant_volunteer_catp = add_prefix(quant_volunteer_catp, 'mni_')
+        output_quant_volunteer_pcr = add_prefix(quant_volunteer_pcr, 'mni_')
+        output_kinetic_volunteer = add_prefix(kinetic_volunteer, 'mni_')
 
         # read data
         if applyB1Correction == 1:
@@ -81,17 +88,39 @@ def run_group(group_sub,roi_id, applyB1Correction):
             kinetic = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'kinetic')
             flux = readExcel( sub_par['output_dir'], group_sub[i]+'_'+roi_id, 'flux_ck')
         
-
+        
         apply_warp(flux_volunteer_pcr, 
                         INITIALIZATION['template']['mni_brain'], 
                         warp_file,
                         out_file=output_flux_volunteer_pcr,
                         forceNii=True)
+        apply_warp(quant_volunteer_catp, 
+                        INITIALIZATION['template']['mni_brain'], 
+                        warp_file,
+                        out_file=output_quant_volunteer_catp,
+                        forceNii=True)
+        apply_warp(quant_volunteer_pcr, 
+                        INITIALIZATION['template']['mni_brain'], 
+                        warp_file,
+                        out_file=output_quant_volunteer_pcr,
+                        forceNii=True)
+        apply_warp(kinetic_volunteer, 
+                        INITIALIZATION['template']['mni_brain'], 
+                        warp_file,
+                        out_file=output_kinetic_volunteer,
+                        forceNii=True)
+
 
         if i == 0:
             flux_vol_pcr =  np.squeeze(openArrayImages(output_flux_volunteer_pcr))
+            conc_vol_pcr =  np.squeeze(openArrayImages(output_quant_volunteer_pcr))
+            conc_vol_catp =  np.squeeze(openArrayImages(output_quant_volunteer_catp))
+            kinetic_vol =  np.squeeze(openArrayImages(output_kinetic_volunteer))
         else:
             flux_vol_pcr = flux_vol_pcr + np.squeeze(openArrayImages(output_flux_volunteer_pcr))
+            conc_vol_pcr =  conc_vol_pcr+ np.squeeze(openArrayImages(output_quant_volunteer_pcr))
+            conc_vol_catp = conc_vol_catp+  np.squeeze(openArrayImages(output_quant_volunteer_catp))
+            kinetic_vol =  kinetic_vol +np.squeeze(openArrayImages(output_kinetic_volunteer))
             
 
         concentrations_group[0,i] = concentrations['PCr concentration [mM]'][0]
@@ -101,12 +130,18 @@ def run_group(group_sub,roi_id, applyB1Correction):
         flux_group[i] = flux[0][0]
         kinetic_group[i] = kinetic[0][0]   
     flux_vol_pcr = flux_vol_pcr/len(group_sub)
+    conc_vol_pcr = conc_vol_pcr/len(group_sub)
+    conc_vol_catp = conc_vol_catp/len(group_sub)
+    kinetic_vol = kinetic_vol/len(group_sub)
 
     img = nib.load(output_flux_volunteer_pcr)
     hdr = img.header
-    path = os.path.join(group['output_dir'], 'average_flux.nii')
+    
 
-    nib.save( nib.Nifti1Image(flux_vol_pcr, None, hdr), path)           
+    nib.save( nib.Nifti1Image(flux_vol_pcr, None, hdr), os.path.join(group['output_dir'], 'average_flux.nii'))           
+    nib.save( nib.Nifti1Image(conc_vol_pcr, None, hdr), os.path.join(group['output_dir'], 'average_conc_pcr.nii'))           
+    nib.save( nib.Nifti1Image(conc_vol_catp, None, hdr), os.path.join(group['output_dir'], 'average_conc_catp.nii'))           
+    nib.save( nib.Nifti1Image(kinetic_vol, None, hdr), os.path.join(group['output_dir'], 'average_kinectic_nii'))           
 
     all_list = np.asarray([concentrations_group,kinetic_group,flux_group ])
     df1 = pd.DataFrame(all_list)
